@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>2048 Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #faf8ef;
+        }
+
+        #game-container {
+            width: 400px;
+            margin: 20px;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background-color: #bbada0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .cell {
+            width: 90px;
+            height: 90px;
+            background-color: rgba(238, 228, 218, 0.35);
+            border-radius: 3px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 35px;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 3px;
+            animation: appear 0.15s;
+        }
+
+        @keyframes appear {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        #score {
+            font-size: 24px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>2048</h1>
+    <div id="score">Score: 0</div>
+    <div id="game-container">
+        <div id="grid"></div>
+    </div>
+
+    <script>
+        const colorMap = {
+            2: ['#eee4da', '#776e65'],
+            4: ['#ede0c8', '#776e65'],
+            8: ['#f2b179', '#f9f6f2'],
+            16: ['#f59563', '#f9f6f2'],
+            32: ['#f67c5f', '#f9f6f2'],
+            64: ['#f65e3b', '#f9f6f2'],
+            128: ['#edcf72', '#f9f6f2'],
+            256: ['#edcc61', '#f9f6f2'],
+            512: ['#edc850', '#f9f6f2'],
+            1024: ['#edc53f', '#f9f6f2'],
+            2048: ['#edc22e', '#f9f6f2']
+        };
+
+        let grid = [];
+        let score = 0;
+        const gridSize = 4;
+
+        function initGame() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+            score = 0;
+            updateScore();
+            
+            // 创建单元格
+            for (let i = 0; i < gridSize * gridSize; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                gridElement.appendChild(cell);
+            }
+            
+            addNewNumber();
+            addNewNumber();
+        }
+
+        function addNewNumber() {
+            const emptyCells = [];
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === 0) emptyCells.push({x: i, y: j});
+                }
+            }
+            if (emptyCells.length === 0) return;
+
+            const cell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            grid[cell.x][cell.y] = Math.random() < 0.9 ? 2 : 4;
+            createNumberElement(cell.x, cell.y, grid[cell.x][cell.y]);
+        }
+
+        function createNumberElement(row, col, value) {
+            const number = document.createElement('div');
+            number.className = 'number';
+            number.textContent = value;
+            number.style.backgroundColor = colorMap[value] ? colorMap[value][0] : '#000';
+            number.style.color = colorMap[value] ? colorMap[value][1] : '#fff';
+            number.style.setProperty('--row', row);
+            number.style.setProperty('--col', col);
+            
+            const index = row * gridSize + col;
+            document.getElementsByClassName('cell')[index].appendChild(number);
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = `Score: ${score}`;
+        }
+
+        function move(direction) {
+            let moved = false;
+            const oldGrid = JSON.stringify(grid);
+
+            if (direction === 'left' || direction === 'right') {
+                grid.forEach(row => processRow(row, direction));
+            } else {
+                const columns = [];
+                for (let col = 0; col < gridSize; col++) {
+                    const column = grid.map(row => row[col]);
+                    processRow(column, direction);
+                    grid.forEach((row, i) => row[col] = column[i]);
+                }
+            }
+
+            moved = JSON.stringify(grid) !== oldGrid;
+            if (moved) {
+                addNewNumber();
+                updateDisplay();
+                if (isGameOver()) {
+                    setTimeout(() => {alert('Game Over!');}, 500); 
+                }
+            }
+        }
+
+        function processRow(row, direction) {
+            const original = [...row.filter(x => x !== 0)];
+            let modified = [];
+            
+            if (direction === 'left' || direction === 'up') {
+                for (let i = 0; i < original.length; i++) {
+                    if (i < original.length - 1 && original[i] === original[i + 1]) {
+                        modified.push(original[i] * 2);
+                        score += original[i] * 2;
+                        i++;
+                    } else {
+                        modified.push(original[i]);
+                    }
+                }
+                while (modified.length < gridSize) modified.push(0);
+            } else {
+                for (let i = original.length - 1; i >= 0; i--) {
+                    if (i > 0 && original[i] === original[i - 1]) {
+                        modified.unshift(original[i] * 2);
+                        score += original[i] * 2;
+                        i--;
+                    } else {
+                        modified.unshift(original[i]);
+                    }
+                }
+                while (modified.length < gridSize) modified.unshift(0);
+            }
+
+            row.splice(0, gridSize, ...modified);
+        }
+
+        function isGameOver() {
+            // 检查空单元格
+            if (grid.some(row => row.includes(0))) return false;
+            
+            // 检查相邻相同数字
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if ((j < gridSize - 1 && grid[i][j] === grid[i][j + 1]) ||
+                        (i < gridSize - 1 && grid[i][j] === grid[i + 1][j])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function updateDisplay() {
+            const cells = document.getElementsByClassName('cell');
+            grid.forEach((row, i) => {
+                row.forEach((value, j) => {
+                    const index = i * gridSize + j;
+                    cells[index].innerHTML = '';
+                    if (value !== 0) {
+                        createNumberElement(i, j, value);
+                    }
+                });
+            });
+            updateScore();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const directionMap = {
+                'ArrowLeft': 'left',
+                'ArrowRight': 'right',
+                'ArrowUp': 'up',
+                'ArrowDown': 'down'
+            };
+            if (directionMap[e.key]) {
+                e.preventDefault();
+                move(directionMap[e.key]);
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+</html>
