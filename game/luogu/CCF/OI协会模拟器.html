@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<!-- saved from url=(0052)https://joshuaurora.github.io/CCF/DZD_Simulator.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OI协会模拟器</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--bg2:#0b0e18;--panel:#101526;--panel2:#151c31;--line:#24304d;
+  --text:#dbe7ff;--dim:#7d8fb3;--acc:#00ddb3;--gold:#ffc844;--red:#ff5577;
+  --blue:#56a6ff;--green:#31d98b;--purple:#9a74ff;--orange:#ff9b54;
+  --shadow:0 12px 30px rgba(0,0,0,.28);--radius:16px;
+}
+body.light{
+  --bg:#eef4ff;--bg2:#ffffff;--panel:#f8fbff;--panel2:#edf4ff;--line:#cfdcf1;
+  --text:#11223d;--dim:#62728f;--acc:#00a889;--gold:#cf9600;--red:#db4767;
+  --blue:#2e7fff;--green:#1ca86a;--purple:#7d61ff;--orange:#e57a29;
+  --shadow:0 12px 30px rgba(41,73,123,.12);
+}
+body{background:radial-gradient(circle at top,var(--bg2),var(--bg) 45%);color:var(--text);font-family:"Courier New","Fira Code",monospace;min-height:100vh;line-height:1.6}
+button,input,select{font:inherit}
+button{cursor:pointer;border:none}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px}
+#app{min-height:100vh}
+.header{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,var(--panel),var(--panel2));border-bottom:1px solid var(--line);padding:10px 18px;backdrop-filter:blur(8px)}
+.stat-bar{display:flex;gap:8px;flex-wrap:wrap;padding:8px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:4px;overflow:auto;padding:6px 14px;border-bottom:1px solid var(--line)}
+.tab{padding:8px 12px;border-radius:10px 10px 0 0;background:transparent;color:var(--dim);font-weight:700}
+.tab.active{background:var(--panel);color:var(--acc);border:1px solid var(--line);border-bottom-color:var(--panel)}
+.main{max-width:1600px;margin:0 auto;padding:16px}
+.dashboard{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+.sidecol{position:sticky;top:124px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:10px}
+.grid{display:grid;gap:10px}.grid-auto{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{padding:8px 14px;border-radius:10px;font-weight:800;font-size:13px;box-shadow:var(--shadow)}
+.btn-dis{opacity:.42;cursor:not-allowed!important;background:var(--line)!important;color:var(--dim)!important;box-shadow:none!important}
+.inp{background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px 10px;width:96px;text-align:center}
+.pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.progress{height:6px;background:var(--line);border-radius:999px;overflow:hidden}.progress>div{height:100%;border-radius:999px}
+.warn-bar{background:rgba(255,155,84,.12);border-bottom:1px solid rgba(255,155,84,.22);padding:8px 18px}
+.matchCard{min-height:180px;cursor:pointer}
+.story{background:linear-gradient(180deg,rgba(0,221,179,.08),rgba(86,166,255,.05));border:1px solid rgba(0,221,179,.16);border-radius:14px;padding:12px;margin-bottom:10px}
+.details-grid{display:grid;grid-template-columns:160px 1fr;gap:6px 12px;font-size:13px}
+.mono-dim{color:var(--dim)}
+.news-card{border-left:4px solid;border-radius:14px;padding:14px;background:var(--bg2);margin-bottom:8px}
+.bottom-log{margin-top:14px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:18px;z-index:100}.modal{max-width:980px;width:100%;max-height:84vh;overflow:auto;background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+.tip{position:relative}.tip:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:180px;max-width:320px;white-space:normal;font-size:12px;z-index:200;box-shadow:var(--shadow)}
+.guide-focus{position:relative;z-index:220;outline:3px solid var(--gold);box-shadow:0 0 0 9999px rgba(0,0,0,.45)!important;border-radius:12px}
+.guide-bubble{position:fixed;z-index:230;max-width:340px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+summary{list-style:none} summary::-webkit-details-marker{display:none}
+.comp-detail summary{cursor:pointer;font-weight:900;color:var(--acc);display:flex;align-items:center;gap:6px}
+.comp-detail[open] summary{margin-bottom:10px}
+@media (max-width:1100px){.dashboard{grid-template-columns:1fr}.sidecol{position:static}}
+</style>
+</head>
+<body class="light">
+<div id="app"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;text-align:center;position:relative"><div style="position:absolute;inset:0;opacity:.05;background-image:repeating-linear-gradient(0deg,var(--acc) 0 1px,transparent 1px 56px),repeating-linear-gradient(90deg,var(--acc) 0 1px,transparent 1px 56px)"></div><div style="position:relative;z-index:1;max-width:760px"><div style="font-size:12px;letter-spacing:8px;color:var(--dim);margin-bottom:18px">EST. 2037 · POST-CCF ERA</div><div style="font-size:56px;font-weight:900;letter-spacing:4px;color:var(--acc);line-height:1.05;margin-bottom:6px">OI协会</div><div style="font-size:30px;font-weight:900;letter-spacing:6px;margin-bottom:22px">模拟器</div><div class="story" style="text-align:left;font-size:16px;line-height:2;margin-bottom:16px"><p style="color:var(--gold);font-weight:900;margin-bottom:6px">📜 剧情背景</p><p><b style="color:var(--red)">CCF</b> 在2037年彻底谢幕。多年争议、收费风波与信任坍塌，终于让旧时代落幕。</p><p>而你，拿到了重建竞赛体系的许可。你手里有一点启动资金、有限的行动点，以及整个圈子半信半疑的注视。</p><p style="font-weight:900">接下来的十年，你要回答一个问题：你会重建秩序，还是重复历史？</p></div><div style="margin-bottom:20px;padding:14px 20px;border-radius:14px;border:1px solid var(--line);display:inline-block;background:var(--bg2)"><div style="font-size:11px;font-weight:900;letter-spacing:3px;color:var(--dim);margin-bottom:8px">GAME MODE</div><div class="flex" style="align-items:center;gap:14px"><button id="hardModeBtn" class="btn" style="background:var(--line);color:#000;font-size:14px;padding:10px 22px;font-weight:900">⚔️ 困难模式：已关闭</button><div style="text-align:left;font-size:12px;color:var(--dim)">初始资金/AP/声誉减少<br>收益×0.8 · 维护费×1.4 · 衰减加快</div></div></div><div class="flex" style="justify-content:center"><button id="startBtn" class="btn" style="padding:18px 64px;background:var(--acc);color:#000;font-size:18px;letter-spacing:4px">开始经营</button><button id="themeBtnMenu" class="btn" style="padding:18px 24px;background:var(--gold);color:#000">切换亮/暗</button><button id="creditsBtn" class="btn" style="padding:18px 24px;background:var(--purple);color:#000">制作人员</button></div></div></div></div>
+<script>
+"use strict";
+function Ru(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function cl(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+function uid(){return Math.random().toString(36).slice(2,11)}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")}
+function pill(text,color,tip){return '<span class="pill tip" data-tip="'+esc(tip||"")+'" style="background:'+color+'15;color:'+color+'">'+text+'</span>'}
+const MO=["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const TC=["#7dd3fc","#5eead4","#86efac","#fde68a","#fdba74","#fca5a5","#c4b5fd","#f9a8d4","#fb923c","#94a3b8","#72e3bf","#b8a1ff"];
+const FLOORS=[
+{id:"time_n",cat:"time",name:"标准时间",icon:"⏱️",desc:"默认赛程，稳妥开局。",formal:"比赛时长保持默认。",ap:0,cost:0,fx:{timeM:1}},
+{id:"time_l",cat:"time",name:"加时赛",icon:"⏳",desc:"给选手更多思考空间。",formal:"比赛更从容，口碑更稳。",ap:4,cost:300,fx:{timeM:1.5,solvB:.15}},
+{id:"time_s",cat:"time",name:"闪电赛",icon:"⚡",desc:"更刺激，但翻车率更高。",formal:"节奏更快，争议略增。",ap:2,cost:100,fx:{timeM:.7,hangM:1.3,repB:1}},
+{id:"fmt_oi",cat:"fmt",name:"OI赛制",icon:"📋",desc:"传统盲评。",formal:"维持传统挂分风险。",ap:0,cost:0,fx:{hangR:.15}},
+{id:"fmt_ioi",cat:"fmt",name:"IOI赛制",icon:"🔄",desc:"分点评测。",formal:"显著减少挂分争议。",ap:5,cost:700,fx:{hangR:0}},
+{id:"fmt_se",cat:"fmt",name:"OI+Self-Eval",icon:"🔍",desc:"增加自评环节。",formal:"进一步降低争议。",ap:2,cost:200,fx:{hangR:.06}},
+{id:"opening",cat:"evt",name:"开幕式",icon:"🎪",desc:"媒体关注更高。",formal:"提高口碑和报名意愿。",ap:5,cost:1200,fx:{repB:3,partM:1.1}},
+{id:"lecture",cat:"evt",name:"赛后讲题",icon:"🎓",desc:"做成学习体验。",formal:"稳定提升赛后好评。",ap:2,cost:350,fx:{repB:2}},
+{id:"live",cat:"evt",name:"比赛直播",icon:"📺",desc:"增强传播力。",formal:"提高传播度与报名人数。",ap:6,cost:1400,fx:{repB:2,partM:1.2}},
+{id:"awards",cat:"evt",name:"颁奖典礼",icon:"🏅",desc:"仪式感更强。",formal:"显著增加正面观感。",ap:5,cost:1600,fx:{repB:4}},
+{id:"wkshp",cat:"evt",name:"Workshop",icon:"🛠️",desc:"赛前辅导。",formal:"让比赛更像完整活动。",ap:2,cost:300,fx:{repB:1,solvB:.1}},
+{id:"p_easy",cat:"diff",name:"简单题集",icon:"🟢",desc:"更适合拉新。",formal:"降低门槛，扩大人群。",ap:1,cost:50,fx:{diffM:-2,partM:1.2}},
+{id:"p_hard",cat:"diff",name:"困难题集",icon:"🔴",desc:"更能打品牌。",formal:"提高品牌感，也更挑组织能力。",ap:2,cost:100,fx:{diffM:2,repMul:1.3,partM:.8}},
+{id:"p_more",cat:"diff",name:"题目加量",icon:"📚",desc:"赛程更扎实。",formal:"增加题目数量。",ap:4,cost:350,fx:{extraP:2}},
+{id:"wifi",cat:"fac",name:"高速网络",icon:"📡",desc:"评测更稳。",formal:"减少系统异常与争议。",ap:3,cost:600,fx:{hangM:.7,repB:1}},
+{id:"food",cat:"fac",name:"选手餐饮",icon:"🍱",desc:"吃得好，怨气少。",formal:"减轻现场情绪。",ap:1,cost:500,fx:{repB:2,solvB:.05}},
+{id:"shirt",cat:"fac",name:"纪念T恤",icon:"👕",desc:"做成文化符号。",formal:"让活动更像品牌事件。",ap:2,cost:400,fx:{repB:2,partM:1.05}},
+{id:"venue",cat:"fac",name:"豪华场地",icon:"🏛️",desc:"顶级考场配置。",formal:"显著抬高体验感与报名意愿。",ap:7,cost:2000,fx:{repB:3,solvB:.1,partM:1.15}},
+{id:"invite",cat:"spec",name:"特邀选手",icon:"⭐",desc:"明星选手自带热度。",formal:"放大关注度。",ap:6,cost:1400,fx:{repB:4,partM:1.1}},
+{id:"spons",cat:"spec",name:"企业赞助",icon:"💎",desc:"缓解资金压力。",formal:"增加资金，并略微增益口碑。",ap:4,cost:0,fx:{moneyB:600,repB:1}}
+];
+const FCATS=[{id:"time",name:"时间",c:"#60a5fa",ex:true},{id:"fmt",name:"赛制",c:"#a78bfa",ex:true},{id:"evt",name:"活动",c:"#f472b6"},{id:"diff",name:"题目",c:"#34d399"},{id:"fac",name:"设施",c:"#fbbf24"},{id:"spec",name:"特殊",c:"#f97316"}];
+const COMPS=[
+{id:"csjp_chu",name:"CSJ-P初赛",tier:0,bd:1,bp:7,dm:9,board:false,maxSites:50,minLineTier:-1,unlockRep:0,story:"你接手的第一场区域预选赛。规模不大，但所有人都在看你会不会重蹈覆辙。"},
+{id:"cssp_fu",name:"CSS-P复赛",tier:1,bd:2,bp:4,dm:10,board:false,maxSites:50,minLineTier:-1,unlockRep:0,story:"第一次真正接受圈内检验的节点。"},
+{id:"csjp",name:"CSJ-P",tier:2,bd:3,bp:4,dm:11,board:false,maxSites:50,minLineTier:-1,unlockRep:0,story:"基层选手数量庞大，组织失误会被迅速放大。"},
+{id:"cssp",name:"CSS-P",tier:3,bd:4,bp:4,dm:0,board:false,maxSites:50,minLineTier:-1,unlockRep:0,story:"开始被拿来和过去的经典赛季正面比较。"},
+{id:"shengxuan",name:"省选",tier:4,bd:5,bp:4,dm:1,board:true,maxSites:50,minLineTier:-1,unlockRep:0,story:"从这里开始，公信力比热闹更重要。"},
+{id:"oinp",name:"NOIP",tier:5,bd:6,bp:4,dm:2,board:false,maxSites:50,minLineTier:-1,unlockRep:0,story:"全国视线开始聚焦。"},
+{id:"noi",name:"NOI",tier:6,bd:7,bp:4,dm:3,board:true,maxSites:1,minLineTier:3,unlockRep:0,story:"金牌、名校、未来，所有压力同时压到主办方肩上。它需要清晰且可信的晋级线。"},
+{id:"wc",name:"WC冬令营",tier:7,bd:8,bp:4,dm:1,board:true,maxSites:50,minLineTier:-1,unlockRep:0,story:"传奇与翻车都容易被记住的地方。"},
+{id:"camp",name:"夏令营",tier:8,bd:8,bp:3,dm:5,board:false,maxSites:3,minLineTier:3,unlockRep:0,story:"一个圈内辨识度极高的夏季活动。办好了会成为氛围和口碑双赢的窗口。"},
+{id:"team_select",name:"国家队选拔",tier:9,bd:9,bp:4,dm:6,board:false,maxSites:2,minLineTier:6,unlockRep:58,story:"只有当声誉真正站稳，你才有资格碰这条赛道。"},
+{id:"team_camp",name:"国家队集训",tier:10,bd:9,bp:5,dm:7,board:true,maxSites:1,minLineTier:9,unlockRep:68,story:"你不只是在办比赛，而是在承接最顶尖选手的培养责任。"},
+{id:"ioi",name:"IOI",tier:11,bd:10,bp:5,dm:8,board:true,maxSites:1,minLineTier:10,unlockRep:78,story:"这是整个体系的皇冠。办稳它，世界会重新看待这套体系。"}
+];
+const JUDGES=[
+{id:"j0",name:"树莓派集群",mdl:"RPi 4B ×10",pow:1,mnt:200,upg:0,e:"🫐"},
+{id:"j1",name:"办公台式机",mdl:"i5-12400/16GB",pow:2,mnt:500,upg:3000,e:"🖥️"},
+{id:"j2",name:"专业工作站",mdl:"i7-13700K/64GB",pow:4,mnt:1000,upg:8000,e:"💻"},
+{id:"j3",name:"高性能服务器",mdl:"Xeon W-2495X/128GB",pow:7,mnt:2000,upg:20000,e:"🖲️"},
+{id:"j4",name:"数据中心节点",mdl:"EPYC 9654/256GB",pow:12,mnt:5000,upg:50000,e:"🏗️"},
+{id:"j5",name:"超算集群",mdl:"Dual EPYC 9754/512GB",pow:20,mnt:10000,upg:120000,e:"🔥"}
+];
+const TAGS=["Ad-Hoc","超纲","冷门"],SN=["张三","李四","王五","赵六","陈七","周八","吴九","郑十","钱十一","孙十二"],IN=["刘督察","陈巡视","黄监理","马专员","宋审核","高巡查","林督导","许监察"],IT=["初级巡视员","中级督察","高级监理","首席特派员"];
+const TUTORIAL_PAGES=[
+{title:"欢迎来到后CCF时代",body:"📋 目标：用十年让信息学竞赛重新被信任。\n\n你拥有一笔启动资金和一些行动点(AP)。十年后，你的成绩将从声誉、财务、参赛规模、监督体系、稳定性等维度综合评分，满分1000分。\n\n⚠️ 前半年是「隐形观察期」——比赛可以办，但口碑不会变动。这段时间是练手机会，不要浪费。",selector:"#logoBtn"},
+{title:"五大资源一览",body:"💰 资金：每月扣除评测维护费和特派薪资。举办比赛会产生收支差额（可能亏损）。\n\n⚡ 行动点(AP)：解锁比赛/晋级线/楼层的货币。每月自动增加，声誉越高、楼层越多，涨得越快。\n\n⭐ 声誉：口碑值。决定自然报名人数、每月AP增速和高级赛事解锁条件。每月会自然小幅下跌，资金过多也会压声誉。\n\n🖥️ 评测机：算力决定能否举办高难度比赛。算力不足会直接翻车。\n\n🕵️ 特派员：核心监督力量。每月稳定增加声誉，比赛结束后额外加成。",selector:".stat-bar"},
+{title:"行动点(AP)怎么花",body:"⚡ AP是游戏最紧张的资源，管理好它是胜负关键。\n\n花在哪里：\n• 解锁新比赛：层级越高消耗越多\n• 添加晋级线：每条固定消耗\n• 给比赛添加楼层：视楼层类型而定\n\n每月获得：基础值 + 声誉加成 + 楼层累积加成\n\n💡 声誉越高每月AP涨得越快；楼层累积越多也会加速AP回收——前期多花AP加楼层，后期会有回报。",selector:".stat-bar"},
+{title:"声誉：最重要的数字",body:"⭐ 声誉是整个游戏的核心驱动力。\n\n声誉影响什么：\n• 参赛人数基数（声誉越高自然来的人越多）\n• 每月AP增速\n• 解锁高级赛事（国家队系列和IOI需要较高声誉才会开放）\n• 最终评分中占最大权重\n\n声誉怎么涨：\n✅ 办高质量比赛（出题质量高、培训充分、好楼层）\n✅ 雇佣特派员（每月稳定增加）\n✅ 添加开幕式/直播/颁奖等活动楼层\n\n声誉怎么掉：\n❌ 题目质量差、翻车、未培训出赛\n❌ 资金过于充裕会触发「富而不仁」缓慢衰减\n❌ 每月自然小幅衰减",selector:".stat-bar"},
+{title:"第一步：解锁并配置比赛",body:"🏁 在「比赛」标签页，点击「可创建比赛」下的按钮，消耗AP解锁一场比赛。\n\n解锁后需配置四件事：\n① 开赛月：选择比赛举办月份。避免同月多场撞期。\n② 收费：中等偏低的收费是吸引参赛的甜点区；定价过高人数会锐减；免费最吸引人但收入有限。\n③ 考点数：越多考点参赛越多，但成本也涨。注意每个比赛有考点上限。\n④ 楼层：见下一页。\n\n💡 建议路线：CSJ-P初赛 → CSJ-P → NOIP → NOI，是最稳的入门链路。",selector:".tabs"},
+{title:"楼层：定义比赛个性",body:"🏗️ 点击「+楼层」为比赛添加选项。\n\n六大类型：\n⏱️ 时间类（互斥）：标准/加时/闪电，影响挂分率和口碑\n📋 赛制类（互斥）：OI默认有一定挂分率；IOI赛制挂分归零，但需要更多AP和资金\n🎪 活动类：开幕式/直播/颁奖/讲题等，显著加声誉和参赛人数\n📚 题目类：加量/简单/困难题集，影响参赛基数和品牌\n🏛️ 设施类：网络/餐饮/T恤/豪华场地，减少异常、提升口碑\n⭐ 特殊类：特邀选手（大幅加声誉）、企业赞助（不花钱还能获得资金）\n\n💡 NOI/夏令营/国家队集训/IOI上，开幕式+直播+颁奖的组合有额外加成，非常值得。",selector:".tabs"},
+{title:"出题系统：质量决定口碑",body:"📝 点击「题目」按钮进入题目配置面板。每场比赛需要将所有题目分配给出题人。\n\n出题人属性：\n• 实力(sk)：决定题目难度上限\n• 质量(qu)：影响题目最终质量，越高越好\n• 容量(cap)：一人最多出几道题\n\n质量的重要性：\n• 比赛层级越高，对平均质量的要求越高\n• 质量不达标会直接拖累口碑；质量出色则是保口碑的核心\n• 出题人质量差异较大时，高tier赛事优先让最优秀的出题人上\n\n💡「自动分配」会按质量从高到低自动匹配。验题（消耗少量资金）可消除超纲/冷门标签，高tier比赛强烈建议验题。",selector:".tabs"},
+{title:"培训：不培训=在赌命",body:"🎓 在比赛详情页，出题完成后点击「组织培训」。有基础/标准/高级三档。\n\n为什么一定要培训：\n✅ 已培训：比赛正常进行，获得口碑加成\n❌ 未培训：大概率出现监考尺度不统一、考场流程混乱、申诉量激增等异常，这些都会损害口碑\n\n培训成本随考点数成比例增加。\n\n⚠️ 注意：扩大考点数后需要重新培训！培训只对当时的考点数有效。\n\n高级别赛事（国家队系列/IOI）培训加成更高，强烈建议用高级培训。",selector:".tabs"},
+{title:"晋级线：连接成体系",body:"🧭 点击「晋级线」标签页配置选手晋级路径。\n\n晋级线决定什么：\n• 下一场比赛的初始参赛人数（= 上场参赛人数 × 通过率）\n• 收费和层级衔接合理时有额外吸引力加成\n\n关键设置：\n• 通过率：中等偏低的通过率有额外参赛加成，过高或过低都不理想\n• 收费：中等偏低的定价最优，过高减少下场报名\n• 层级差：相差一两级最自然；跨度过大会有惩罚\n\n⚠️ NOI、夏令营、国家队选拔有最低晋级线层级要求。没有符合要求的晋级线，这些比赛根本无法举办！",selector:".tabs"},
+{title:"晋级线体系设计建议",body:"🗺️ 好的体系设计示意：\n\nCSJ-P初赛 → CSJ-P → NOIP → NOI\nCSS-P复赛 → CSS-P → 省选 → NOI\n\n为什么这样好：\n✅ 每条链路层级差均匀，不会有惩罚\n✅ 大多数比赛都能通过晋级线到达NOI（体系连贯性加分）\n✅ 各条线层级差接近，全局一致性加分\n\nWC冬令营和夏令营可以作为NOI后的支线，不影响主链路。\n\n💡 晋级线体系在最终评分中有一定权重，但对参赛人数的影响更是立竿见影。设计好晋级线往往比任何楼层都更有价值。",selector:".tabs"},
+{title:"评测机：算力门槛",body:"⚙️ 在「评测」标签页管理评测环境。\n\n每个比赛都有最低算力要求，层级越高要求越高。评测页面会直接显示当前评测机能支撑哪些比赛。\n\n升级路线参考：\n• 刚开始：树莓派集群连初级赛事都撑不住，要尽快升级\n• 中期：工作站级别才能举办中高级赛事\n• 后期：NOI及以上需要高性能服务器乃至数据中心级别\n\n💡 必须在办赛前升级！算力不足直接触发翻车。升级费用不菲，提前攒钱规划。",selector:".tabs"},
+{title:"特派员：长期信任的基础",body:"🕵️ 特派员是游戏中最稳定的口碑来源。\n\n特派员每月效果：\n• 根据能力和尽职属性，每月持续增加口碑\n• 比赛结束后还会额外给出加成\n\n雇佣成本 = 一次性雇佣费 + 每月月薪。能力和尽职越高，效果越好，薪资也越高。\n\n雇佣时机：游戏前期就应该雇一两个初级特派员打底。到中期，建立起一支稳定的特派员队伍，能让声誉在办赛之外也持续增长。\n\n特派员体系在最终评分中有专项权重。",selector:".tabs"},
+{title:"随机事件：保持警惕",body:"🎲 游戏进行中，每隔一段时间会触发随机事件，包括：\n\n好事：企业赞助联络 💼、知名选手好评 🌟、高校合作 🎓、国际会议邀请 🏆\n\n坏事：舆论风波 📱、数据异常曝光 ⚠️、设备故障维修 🔧\n\n有些事件同时带来资金和口碑变化，有些则需要取舍。\n\n💡「数据异常曝光」是最致命的随机惩罚，特派员可以一定程度上降低其后续影响。平时维持充足的资金缓冲，是应对随机事件的最好方式。",selector:".sidecol"},
+{title:"最终评分：十年后怎么算",body:"🏆 十年后，你的表现从以下维度综合评分：\n\n① 声誉——最重要的单项，权重最高\n② 财务健康——资金充足有加分，长期亏损有惩罚\n③ 参赛规模——累计参赛总人次\n④ 监督体系——特派员队伍的整体能力\n⑤ 稳定性——每场比赛口碑变化是否平稳\n⑥ 执行质量——有多少场比赛既培训了又没有出异常\n⑦ 高阶赛事——国选/集训/IOI是否建立\n⑧ 晋级线体系——体系连贯性与层级一致性\n\n得分够高达成GOOD ENDING；中等为NEUTRAL；否则BAD。",selector:".sidecol"},
+{title:"十条实战建议",body:"💡 快速上手要点：\n\n1. 第一年先办初级赛事，回收资金再升级评测机\n2. 尽早升级评测机，否则中高级赛事无法举办\n3. 晋级线通过率用默认值即可，默认已接近最优\n4. 不要让两场比赛同月开赛——会相互分流\n5. 每场比赛都培训！哪怕基础培训也比不培训强得多\n6. IOI前必须先建立国家队选拔和国家队集训（各需一定声誉）\n7. 企业赞助楼层不花AP也不花钱还能获得资金，性价比极高\n8. 声誉到一定程度后开始认真建立晋级线体系，参赛人数会显著提升\n9. 开赛前看预警条，它会提示你哪场比赛没准备好\n10. 资金过于充裕后声誉会缓慢下降，可以投资升级评测机或添加楼层来消耗",selector:".bottom-log"}
+];
+var G,screen,tab,selT,fp,bf,pp,tutorialOpen=false,tutorialPage=0,guideActive=false,customModalOpen=false,changelogOpen=false,menuAllowCustom=false,menuHardMode=false;
+var customForm={name:'自定义赛事',tier:3,bd:4,bp:4,board:false,maxSites:50,minLineTier:-1,unlockRep:0,story:'一场由你亲手设计的比赛。'};
+function mkS(){var nm=SN[Ru(0,SN.length-1)]+Ru(10,99),sk=Ru(2,10),qu=Ru(2,10),cap=Ru(2,5);var cost=Math.round((sk*150+qu*200+cap*120)*(.85+Math.random()*.3));var probPrice=Math.round((sk*25+qu*40)*(.8+Math.random()*.4));var contractFee=Math.round(cost*1.8);return{id:uid(),nm:nm,sk:sk,qu:qu,cap:cap,used:0,cost:cost,probPrice:probPrice,contractFee:contractFee,monthlyLimit:cap,asgn:[]}}
+function mkI(){var nm=IN[Ru(0,IN.length-1)]+Ru(10,99),lv=Ru(0,3),ab=cl(lv*2+Ru(1,3),1,10),dil=cl(lv*2+Ru(0,3),1,10),sal=Math.round((ab*120+dil*80+lv*400)*(.9+Math.random()*.2));return{id:uid(),nm:nm,lv:lv,title:IT[lv],ab:ab,dil:dil,sal:sal,hire:sal*5}}
+function getComp(id){return COMPS.find(function(c){return c.id===id})||(G&&G.customDefs?G.customDefs.find(function(c){return c.id===id}):null)||null}
+function cSt(tw){
+  var hangR=.15,timeM=1,solvB=0,repB=0,partM=1,diffM=0,extraP=0,hangM=1,repMul=1,moneyB=0;
+  (tw.floors||[]).forEach(function(f){var e=f.fx||{};if(e.hangR!==undefined)hangR=e.hangR;if(e.timeM)timeM=e.timeM;if(e.solvB)solvB+=e.solvB;if(e.repB)repB+=e.repB;if(e.partM)partM*=e.partM;if(e.diffM)diffM+=e.diffM;if(e.extraP)extraP+=e.extraP;if(e.hangM)hangM*=e.hangM;if(e.repMul)repMul*=e.repMul;if(e.moneyB)moneyB+=e.moneyB});
+  var def=getComp(tw.id);
+  var specialBig=(tw.id==="noi"||tw.id==="camp"||tw.id==="team_camp"||tw.id==="ioi");
+  if(specialBig){var hasMajor=(tw.floors||[]).some(function(f){return f.id==="opening"||f.id==="live"||f.id==="awards"});if(hasMajor)repB+=3}
+  return {hangR:hangR,timeM:timeM,solvB:solvB,repB:repB,partM:partM,diffM:diffM,extraP:extraP,hangM:hangM,repMul:repMul,moneyB:moneyB,totP:tw.bp+extraP,effD:cl(tw.bd+diffM,1,10),maxSites:def?def.maxSites:50,minLineTier:def?def.minLineTier:-1,unlockRep:def?def.unlockRep||0:0}
+}
+function priceParticipationMultiplier(fee){
+  if(fee<=100) return cl(1+(100-fee)*0.0022,1,1.22);
+  if(fee<=500) return cl(1-(fee-100)*0.00025,0.9,1.0);
+  var mult=0.9*Math.exp(-(fee-500)/1500);
+  return cl(mult,0.003,0.9)
+}
+function hasRequiredLine(tid,lines,matches){var def=getComp(tid);if(!def||def.minLineTier<0)return true;return lines.some(function(l){return l.to===tid&&matches[l.from]&&matches[l.from].tier>=def.minLineTier})}
+function lineContinuityToNOI(matchId,lines,matches,visited){
+  if(matchId==="noi") return true;
+  visited=visited||{};
+  if(visited[matchId]) return false;
+  visited[matchId]=true;
+  var nexts=lines.filter(function(l){return l.from===matchId}).map(function(l){return l.to});
+  for(var i=0;i<nexts.length;i++){
+    if(lineContinuityToNOI(nexts[i],lines,matches,Object.assign({},visited))) return true;
+  }
+  return false;
+}
+function progressionLineBonus(tid,lines,matches){
+  var target=matches[tid];
+  if(!target) return 1;
+  var incoming=lines.filter(function(l){return l.to===tid&&matches[l.from]});
+  if(!incoming.length) return 1;
+  var best=1;
+  incoming.forEach(function(line){
+    var from=matches[line.from];
+    var gap=target.tier-from.tier;
+    var bonus=1;
+    if(gap===1) bonus+=0.14;
+    else if(gap===2) bonus+=0.11;
+    else if(gap===3) bonus+=0.06;
+    else bonus-=0.05;
+    if(line.pass>=0.52&&line.pass<=0.72) bonus+=0.04;
+    if(line.price>=60&&line.price<=140) bonus+=0.03;
+    if(lineContinuityToNOI(line.from,lines,matches)) bonus+=0.03;
+    best=Math.max(best,bonus);
+  });
+  return cl(best,0.9,1.21)
+}
+function lineDistancePenalty(lines,matches){
+  if(lines.length<=1) return 1;
+  var gaps=[];
+  lines.forEach(function(l){if(matches[l.from]&&matches[l.to]) gaps.push(Math.abs(matches[l.to].tier-matches[l.from].tier))});
+  if(!gaps.length) return 1;
+  var avg=gaps.reduce(function(a,b){return a+b},0)/gaps.length;
+  var variance=gaps.reduce(function(s,g){return s+(g-avg)*(g-avg)},0)/gaps.length;
+  return cl(1-Math.min(0.12,variance*0.03),0.88,1)
+}
+function pathToNOIExistsFromAll(lines,matches){
+  return Object.keys(matches).every(function(id){
+    if(id==="camp") return true;
+    return lineContinuityToNOI(id,lines,matches,{});
+  })
+}
+function estP(tw,rep,lines,matches){
+  var st=cSt(tw),line=lines.find(function(l){return l.to===tw.id}),base;
+  if(tw.tier<=1) base=Math.round(40+3.2*rep-st.effD*3);
+  else if(line){var fr=matches[line.from],lp=(fr&&fr.lastResult)?fr.lastResult.part:Math.round(20+2*rep);base=Math.round(lp*line.pass);if(fr&&fr.suspended)base=Math.round(base*.3)}
+  else base=Math.round(15+2.5*rep-st.effD*2);
+  if(!hasRequiredLine(tw.id,lines,matches)) base=Math.round(base*0.1);
+  var fee=line?line.price:(tw.regPrice||50),pe=priceParticipationMultiplier(fee),lineBonus=progressionLineBonus(tw.id,lines,matches),coherence=lineDistancePenalty(lines,matches);
+  var cap=(tw.id==="noi"||tw.id==="camp"||tw.id==="team_camp")?400:1e9;
+  return Math.max(5,Math.min(cap,Math.round(base*pe*lineBonus*coherence*st.partM*(1+((tw.sites||1)-1)*.15))))
+}
+function epRange(ep){
+  var lo=Math.round(ep*0.7/10)*10,hi=Math.round(ep*1.3/10)*10;
+  if(lo===hi)hi=lo+10;
+  return lo+'~'+hi;
+}
+function floorMaintCost(f,tw){
+  var baseAP=Math.max(1,Math.floor((f.ap||0)*.35)),baseMoney=Math.max(100,Math.round((f.cost||0)*.15));
+  var sites=tw?tw.sites||1:1;
+  if(f.cat==='fac'||f.cat==='evt'){
+    baseAP=Math.round(baseAP*(1+(sites-1)*.5));
+    baseMoney=Math.round(baseMoney*(1+(sites-1)*.4));
+  }
+  return {ap:baseAP,money:baseMoney};
+}
+function compCost(tw,part){var s=tw.sites||1,fixed=s*600,variable=part*20,bo=tw.board?part*280:0;return{pr:fixed,vr:variable,vo:0,se:0,bo:bo,total:fixed+variable+bo}}
+function trainCost(base,sites){return Math.round(base*(1+(sites-1)*.4))}
+function verCost(diff){return Math.round(300+250*(diff||1))}
+function calcEnd(g){
+  var tp=g.results.reduce(function(s,r){return s+r.part},0),rs=cl(g.rep/75,0,1),ms=cl(g.money/120000,-.2,.45),ps=cl(tp/4500,0,1),is=cl(g.inspectors.reduce(function(s,i){return s+i.ab},0)/24,0,.28),ran=g.results.length,avgRep=ran?g.results.reduce(function(s,r){return s+r.repCh},0)/ran:0,stability=cl((avgRep+6)/12,0,1),prepOk=0,totalEvents=0;
+  Object.keys(g.towers).forEach(function(k){var t=g.towers[k];if(t.lastResult)totalEvents++;if(t.lastResult&&!t.lastResult.noTrainingRisk&&!(t.lastResult.abnormalEvents&&t.lastResult.abnormalEvents.length))prepOk++});
+  var prepScore=totalEvents?prepOk/totalEvents:0.5,eliteBuilt=["team_select","team_camp","ioi"].filter(function(id){return !!g.towers[id]}).length/3;
+  var coherence=lineDistancePenalty(g.lines,g.towers);
+  // --- richer line scoring ---
+  var towerIds=Object.keys(g.towers).filter(function(id){return id!=="camp"&&id!=="wc"});
+  var covered=towerIds.length?towerIds.filter(function(id){return lineContinuityToNOI(id,g.lines,g.towers,{})}).length/towerIds.length:0;
+  var lineScore=towerIds.length===0?0.5:cl(0.3+covered*.7,0.3,1);
+  // pass-rate reasonableness: lines with pass rate 0.3–0.80 score full, outside penalised
+  var passScore=g.lines.length?g.lines.filter(function(l){return l.pass>=0.28&&l.pass<=0.82}).length/g.lines.length:0.5;
+  // tier-gap quality: lines where tier gap is 1–3 (ideal ladder)
+  var gapScore=g.lines.length?g.lines.filter(function(l){var gap=g.towers[l.to]&&g.towers[l.from]?Math.abs(g.towers[l.to].tier-g.towers[l.from].tier):99;return gap>=1&&gap<=3}).length/g.lines.length:0.5;
+  var lineQuality=cl(lineScore*.45+coherence*.25+passScore*.15+gapScore*.15,0,1);
+  var c=rs*.23+ms*.06+ps*.14+is*.09+stability*.11+prepScore*.09+eliteBuilt*.07+lineQuality*.21;
+  return {c:c,tp:tp,detail:{rep:rs,money:ms,participation:ps,inspectors:is,stability:stability,execution:prepScore,elite:eliteBuilt,lineScore:lineScore,coherence:coherence,passScore:passScore,gapScore:gapScore,lineQuality:lineQuality}}
+}
+function calcFinalScore(g){var e=calcEnd(g),d=e.detail;return{total:Math.round(e.c*1000),rep:Math.round(d.rep*100),money:Math.round((d.money+0.2)/0.65*100),participation:Math.round(d.participation*100),inspectors:Math.round(d.inspectors/0.28*100),stability:Math.round(d.stability*100),execution:Math.round(d.execution*100),elite:Math.round(d.elite*100),lines:Math.round(d.lineQuality*100)}}
+function genNews(g){
+  var msgs=[];var e=calcEnd(g);var tp=e.tp;if(g.month<6)return msgs;
+  if(g.money>2000000)msgs.push({icon:"💰",c:"var(--red)",t:"舆情观察",m:"协会账面数字已引发广泛质疑，\"圈地自萌\"的声音越来越响，声誉持续受压。"});
+  else if(g.money>900000)msgs.push({icon:"💸",c:"var(--orange)",t:"社交平台",m:"有人开始讨论协会是否在「为富不仁」——收费和盈余比例都在被拿出来算账。"});
+  else if(g.money>300000)msgs.push({icon:"📰",c:"var(--gold)",t:"财经观察",m:"协会账面已相当充裕，外界开始留意资金去向是否透明。"});
+  else if(g.money>0)msgs.push({icon:"✅",c:"var(--dim)",t:"财务状态",m:"收支基本平衡，家长和社区暂时没有对资金问题提出质疑。"});
+  else if(g.money<0)msgs.push({icon:"📉",c:"var(--red)",t:"资金危机",m:"财务已经击穿警戒线。若再出一次事故，你可能连承办学校都安抚不住。"});
+  if(g.rep>=78)msgs.push({icon:"🌍",c:"var(--green)",t:"国际视野",m:"越来越多人相信，这套体系已经具备承接最高级别赛事的气质。"});
+  else if(g.rep>=70)msgs.push({icon:"🌟",c:"var(--green)",t:"主流评价",m:"教育圈逐渐形成共识：这可能是后CCF时代第一套真正值得信任的比赛体系。"});
+  else if(g.rep>=50)msgs.push({icon:"👍",c:"var(--acc)",t:"家长论坛",m:"越来越多家长留言：终于不是交钱买焦虑，而是真的有人在认真办比赛。"});
+  else if(g.rep>=30)msgs.push({icon:"😐",c:"var(--gold)",t:"OI社区",m:"评价开始分化：有人认可执行力，也有人吐槽题目风格不够统一。"});
+  else if(g.rep>=15)msgs.push({icon:"👎",c:"var(--orange)",t:"匿名讨论区",m:"新协会看着比以前透明，怎么味道还是有点熟悉？口碑还在摇摆。"});
+  else msgs.push({icon:"💀",c:"var(--red)",t:"热搜话题",m:"#新协会比CCF还离谱# 冲上热榜。你不是在经营比赛，而是在和失控叙事赛跑。"});
+  if(tp>10000)msgs.push({icon:"🎉",c:"var(--green)",t:"里程碑",m:"累计参赛已达"+tp+"人次。你不再只是办赛者，而是规则塑造者。"});
+  else if(tp>3000)msgs.push({icon:"📊",c:"var(--blue)",t:"数据快报",m:"累计已有"+tp+"人次参赛。规模开始形成真正的外部影响力。"});
+  if(pathToNOIExistsFromAll(g.lines,g.towers)) msgs.push({icon:"🧭",c:"var(--blue)",t:"体系观察",m:"你的大多数比赛都能顺着晋级线最终抵达 NOI（WC冬令营和夏令营作为支线不计），这会显著增加家长和选手的持续参与意愿。"});
+  if(g.inspectors.length>=3)msgs.push({icon:"🕵️",c:"var(--purple)",t:"内部口碑",m:"特派员队伍逐渐成型，公平终于不只是宣传语。"});
+  if(g.jIdx>=4)msgs.push({icon:"💻",c:"var(--blue)",t:"技术侧",m:"评测环境进入数据中心级别，选手对系统稳定性的抱怨明显减少。"});
+  return msgs
+}
+function initG(){var hd=menuHardMode;return{month:0,year:2037,money:hd?5000:12000,ap:hd?8:12,rep:hd?8:12,jIdx:0,theme:localStorage.getItem('oiTheme')||'dark',towers:{},lines:[],setters:[mkS(),mkS(),mkS()],market:[mkS(),mkS(),mkS(),mkS()],inspectors:[],inspMkt:[mkI(),mkI(),mkI()],log:[{mo:0,yr:2037,msg:"📜 CCF谢幕后的第一年，你拿到了新的办赛许可。所有人都在看：你能不能做得不一样。"}],warnings:[],results:[],over:false,score:0,ending:"neutral",customDefs:[],contracts:[],allowCustom:menuAllowCustom,hard:menuHardMode}}
+function resetGame(){G=initG();screen="menu";tab="matches";selT=null;fp=null;bf=null;pp=null;tutorialOpen=false;tutorialPage=0;guideActive=false;applyTheme();render()}
+function applyTheme(){document.body.classList.toggle('light',G&&G.theme==='light')}
+function toggleTheme(){G.theme=G.theme==='light'?'dark':'light';localStorage.setItem('oiTheme',G.theme);applyTheme();render()}
+function startGuide(){guideActive=true;tutorialOpen=false;tutorialPage=0;render()}
+function nextGuide(){tutorialPage++;if(tutorialPage>=TUTORIAL_PAGES.length){guideActive=false;tutorialPage=0}render()}
+function prevGuide(){tutorialPage=Math.max(0,tutorialPage-1);render()}
+function skipGuide(){guideActive=false;tutorialPage=0;render()}
+function advanceMonth(){
+  if(G.over)return;
+  G.month++;
+  var mo=G.month%12,yr=G.year+Math.floor(G.month/12),ap=2+Math.floor(G.rep/12)+Object.values(G.towers).reduce(function(s,t){return s+Math.floor((t.floors||[]).length/2)},0);
+  G.ap+=ap;
+  var jAge=Math.floor(G.month/12),jM=Math.round(JUDGES[G.jIdx].mnt*(1+jAge*.05)*(G.hard?1.4:1));G.money-=jM;
+  var iSal=G.inspectors.reduce(function(s,i){return s+i.sal},0);G.money-=iSal;
+  var iRep=(G.month<6)?0:G.inspectors.reduce(function(s,i){return s+i.ab*.05+i.dil*.03},0);G.rep=+(G.rep+iRep).toFixed(1);
+  if(G.month>=6&&G.rep>5)G.rep=Math.max(5,+(G.rep-(G.hard?.22:.15)).toFixed(1));
+  if(G.month>=6&&G.money>300000)G.rep=Math.max(0,+((G.rep-Math.log(1+(G.money-300000)/150000)*.05).toFixed(1)));
+  G.contracts.forEach(function(s){s.usedThisMonth=0;s.used=s.asgn?s.asgn.length:0});
+  if(G.month%2===0){G.market=[];for(var i=0;i<Ru(3,6);i++)G.market.push(mkS());G.inspMkt=[];for(var k=0;k<Ru(2,4);k++)G.inspMkt.push(mkI())}
+  G.warnings=[];
+  Object.keys(G.towers).forEach(function(tid){
+    var tw=G.towers[tid];if(tw.ranThisYear)return;var ml=((tw.schedMonth-mo)+12)%12;
+    if(ml>0&&ml<=3){var st=cSt(tw),pDone=(tw.problems||[]).filter(Boolean).length,issues=[];
+      if(pDone<st.totP)issues.push("题目"+pDone+"/"+st.totP);
+      if(!tw.trained)issues.push("未培训");
+      if(JUDGES[G.jIdx].pow<Math.ceil(tw.tier*1.2)+1)issues.push("算力不足");
+      if(st.minLineTier>=0&&!hasRequiredLine(tid,G.lines,G.towers))issues.push("缺少足够级别晋级线");
+      if(issues.length)G.warnings.push({tid:tid,name:tw.name,ml:ml,issues:issues});
+    }
+  });
+  Object.keys(G.towers).forEach(function(tid){
+    var tw=G.towers[tid];if(tw.schedMonth!==mo||tw.ranThisYear)return;
+    var st=cSt(tw),pDone=(tw.problems||[]).filter(Boolean).length,jPow=JUDGES[G.jIdx].pow,minPow=Math.ceil(tw.tier*1.2)+1;
+    if(tw.autoProb&&pDone<st.totP){
+      // Step 1: use existing free setters first
+      for(var pi2=0;pi2<st.totP;pi2++){
+        if(tw.problems&&tw.problems[pi2])continue;
+        var fsCand=G.setters.filter(function(s){return s.used<s.cap}).concat(G.contracts.filter(function(s){return (s.usedThisMonth||0)<s.monthlyLimit&&G.money>=s.probPrice})).sort(function(a,b){return b.qu-a.qu});
+        if(fsCand.length){doAssign(fsCand[0].id,tid,pi2)}
+      }
+      pDone=(tw.problems||[]).filter(Boolean).length;
+      // Step 2: hire from market for remaining slots
+      if(pDone<st.totP){
+        var hired=[],totalHireCost=0,canHire=true;
+        var mkt=G.market.slice().sort(function(a,b){return a.cost-b.cost});
+        var need=st.totP-pDone,mki=0;
+        while(need>0&&mki<mkt.length){
+          var ms2=mkt[mki];var slots=Math.min(ms2.cap,need);
+          if(G.money>=totalHireCost+ms2.cost){totalHireCost+=ms2.cost;hired.push({s:ms2,slots:slots});need-=slots;}
+          mki++;
+        }
+        if(hired.length&&need<=0){
+          G.money-=totalHireCost;
+          hired.forEach(function(h){
+            var ns=Object.assign({},h.s,{asgn:[],used:0});
+            G.setters.push(ns);
+            G.market=G.market.filter(function(x){return x.id!==h.s.id});
+            for(var pi3=0;pi3<st.totP;pi3++){
+              if(tw.problems&&tw.problems[pi3])continue;
+              if(ns.used>=ns.cap)break;
+              doAssign(ns.id,tid,pi3);
+            }
+          });
+          pDone=(tw.problems||[]).filter(Boolean).length;
+          G.log.push({mo:G.month,yr:yr,msg:"🤖 "+tw.name+" 自动招募出题人完成（-¥"+totalHireCost+"），题目已分配。"});
+        } else {
+          G.log.push({mo:G.month,yr:yr,msg:"⚠️ "+tw.name+" 自动出题：市场出题人不足或资金不够，无法补全题目（剩余 "+need+" 题）。"});
+        }
+      }
+    }
+    if(pDone<st.totP||jPow<minPow||!hasRequiredLine(tid,G.lines,G.towers)){
+      if(G.month>=6)G.rep=Math.max(0,G.rep-9);tw.suspended=true;tw.ranThisYear=true;
+      var reason=[];if(pDone<st.totP)reason.push("题目未备齐");if(jPow<minPow)reason.push("算力不足");if(!hasRequiredLine(tid,G.lines,G.towers))reason.push("晋级线体系未达要求");
+      G.log.push({mo:G.month,yr:yr,msg:"💀 "+tw.name+" 因"+reason.join("、")+"被迫翻车。"+(G.month>=6?"声誉-9。":"当前仍是隐形观察期。")});
+      return;
+    }
+    if(tw.autoTrain&&!tw.trained){var atLevels=[["high",800],["mid",400],["low",150]];for(var ati=0;ati<atLevels.length;ati++){var atQ=atLevels[ati][0],atC=trainCost(atLevels[ati][1],tw.sites||1);if(G.money>=atC){G.money-=atC;tw.trained=atQ;tw.trainedSites=tw.sites||1;G.log.push({mo:G.month,yr:yr,msg:"🎓 "+tw.name+" 自动培训：「"+{low:"基础",mid:"标准",high:"高级"}[atQ]+"」（¥"+atC+"）。"});break;}}}
+    var noTrainingRisk=!tw.trained,stats=cSt(tw),jj=JUDGES[G.jIdx],line=G.lines.find(function(l){return l.to===tid}),base;
+    tw.suspended=false;
+    var hm=G.hard?0.8:1;
+    if(tw.tier<=1) base=Math.round((40+3.2*G.rep-stats.effD*3)*hm);
+    else if(line){var fr=G.towers[line.from],lp=(fr&&fr.lastResult)?fr.lastResult.part:Math.round((20+2*G.rep)*hm);base=Math.round(lp*line.pass);if(fr&&fr.suspended)base=Math.round(base*.3)}
+    else base=Math.round((15+2.5*G.rep-stats.effD*2)*hm);
+    var fee=line?line.price:(tw.regPrice||50),pe=priceParticipationMultiplier(fee),lineBonus=progressionLineBonus(tw.id,G.lines,G.towers),coherence=lineDistancePenalty(G.lines,G.towers),rawPart=Math.round(base*pe*lineBonus*coherence*stats.partM*(1+((tw.sites||1)-1)*.15)),cap=(tw.id==="noi"||tw.id==="camp"||tw.id==="team_camp")?400:1e9,part=Math.max(5,Math.min(cap,rawPart));
+    var grossRev=Math.round(part*fee*.84*(1+jj.pow*.03)*(G.hard?.75:1))+stats.moneyB,costs=compCost(tw,part),netRev=grossRev-costs.total;G.money+=netRev;
+    var probs=(tw.problems||[]).filter(Boolean),avgQ=probs.reduce(function(s,p){return s+p.qu},0)/stats.totP,fp2=probs.map(function(p){if(p.verified&&p.tag&&Math.random()<.7)return Object.assign({},p,{tag:null});return p}),badTags=fp2.filter(function(p){return p.tag==="超纲"||p.tag==="冷门"}).length,adHoc=fp2.filter(function(p){return p.tag==="Ad-Hoc"}).length,noTrainHangM=noTrainingRisk?2.4:1,hangCnt=Math.round(part*stats.hangR*stats.hangM*noTrainHangM*(stats.effD/5)),trainB=tw.trained==="high"?3:tw.trained==="mid"?1.5:tw.trained==="low"?.5:0,jRepB=jj.pow*.15,iCB=G.inspectors.reduce(function(s,i){return s+i.ab*.15},0),noTrainPenalty=noTrainingRisk?3.5:0;
+    var repChBase=((avgQ-(tw.tier*1.2+2))*1.5+trainB+stats.repB+jRepB+iCB-badTags*2.5-adHoc*.8-noTrainPenalty)*stats.repMul-(hangCnt>part*.2?2:0);
+    if((tw.id==="team_select"||tw.id==="team_camp"||tw.id==="ioi")&&tw.trained){if(tw.trained==="low")repChBase+=1.2;else if(tw.trained==="mid")repChBase+=2.4;else if(tw.trained==="high")repChBase+=4.2}
+    var repCh=+(repChBase.toFixed(1));if(G.month>=6)G.rep=Math.max(0,+((G.rep+repCh).toFixed(1)));
+    var rTags=fp2.filter(function(p){return p.tag}).map(function(p){return{idx:p.idx,tag:p.tag}}),abnormalEvents=[];
+    if(noTrainingRisk){if(Math.random()<.45)abnormalEvents.push("监考尺度不统一");if(Math.random()<.35)abnormalEvents.push("考场流程混乱");if(Math.random()<.25)abnormalEvents.push("申诉量激增");if(Math.random()<.18)abnormalEvents.push("迟到与进场争议");if(!abnormalEvents.length&&Math.random()<.55)abnormalEvents.push("现场秩序紧张")}
+    var result={part:part,rev:netRev,grossRev:grossRev,costTotal:costs.total,avgQ:+(avgQ.toFixed(1)),hangCnt:hangCnt,repCh:repCh,tags:rTags,abnormalEvents:abnormalEvents,noTrainingRisk:noTrainingRisk};
+    tw.lastResult=result;tw.ranThisYear=true;
+    G.results.push({tid:tid,name:tw.name,yr:yr,mo:mo,part:part,rev:netRev,grossRev:grossRev,costTotal:costs.total,avgQ:result.avgQ,repCh:repCh,tags:rTags,abnormalEvents:abnormalEvents,noTrainingRisk:noTrainingRisk});
+    // Remove non-contracted setters who worked on this comp (one-time use)
+    var usedSids=new Set((tw.problems||[]).filter(Boolean).map(function(p){return p.sid}));
+    var contractedIds=new Set(G.contracts.map(function(s){return s.id}));
+    G.setters=G.setters.filter(function(s){return !usedSids.has(s.id)||contractedIds.has(s.id)});
+    // Reset contracted setter assignments for this comp
+    G.contracts.forEach(function(s){s.asgn=s.asgn?s.asgn.filter(function(a){return a.cid!==tid}):[];s.used=s.asgn.length});
+    tw.problems=[];tw.trained=null;
+    var extraStory="";if(noTrainingRisk)extraStory=abnormalEvents.length?" 但由于未做监考培训，现场出现了“"+abnormalEvents.join("、")+"”等异常情况。":" 虽然硬着头皮办了下来，但未培训监考团队让整个过程都在冒险。";
+    G.log.push({mo:G.month,yr:yr,msg:"🏆 "+tw.name+" 顺利完赛："+part+"人参赛，净收益¥"+netRev+(G.month>=6?"，口碑"+(repCh>0?"+":"")+repCh:"，但现在还处于隐形观察阶段，暂不形成公众评价")+"。"+extraStory});
+  });
+  if(mo===0&&G.month>0){
+    Object.values(G.towers).forEach(function(tw){tw.ranThisYear=false;tw.suspended=false});
+    // Floor maintenance
+    var floorAPTotal=0,floorMoneyTotal=0;
+    Object.values(G.towers).forEach(function(tw){(tw.floors||[]).forEach(function(f){var mc=floorMaintCost(f,tw);floorAPTotal+=mc.ap;floorMoneyTotal+=mc.money})});
+    if(floorAPTotal>0||floorMoneyTotal>0){
+      if(G.ap>=floorAPTotal&&G.money>=floorMoneyTotal){
+        G.ap-=floorAPTotal;G.money-=floorMoneyTotal;
+        G.log.push({mo:G.month,yr:yr,msg:"🏗️ "+yr+"赛季开启。年度楼层维护费：-"+floorAPTotal+"AP，-¥"+floorMoneyTotal+"。"});
+      } else {
+        // Can't afford — remove floors from all towers until within budget
+        var removedAny=false;
+        while((floorAPTotal>G.ap||floorMoneyTotal>G.money)&&Object.values(G.towers).some(function(tw){return tw.floors&&tw.floors.length>0})){
+          // Remove highest-cost floor across all comps
+          var worst=null,worstTid=null;
+          Object.keys(G.towers).forEach(function(tid){(G.towers[tid].floors||[]).forEach(function(f){if(!worst||((f.ap||0)+(f.cost||0)/1000)>((worst.ap||0)+(worst.cost||0)/1000)){worst=f;worstTid=tid}})});
+          if(!worst)break;
+          var wmc=floorMaintCost(worst,G.towers[worstTid]);
+          G.towers[worstTid].floors=G.towers[worstTid].floors.filter(function(f){return f.uid!==worst.uid});
+          floorAPTotal-=wmc.ap;floorMoneyTotal-=wmc.money;
+          removedAny=true;
+        }
+        G.ap-=Math.min(G.ap,floorAPTotal);G.money-=Math.min(G.money,floorMoneyTotal);
+        if(removedAny)G.log.push({mo:G.month,yr:yr,msg:"💸 "+yr+"赛季：维护资源不足，部分楼层被强制移除！请检查各比赛配置。"});
+        else G.log.push({mo:G.month,yr:yr,msg:"🏗️ "+yr+"赛季开启。年度楼层维护费：-"+floorAPTotal+"AP，-¥"+floorMoneyTotal+"。"});
+      }
+    } else {
+      G.log.push({mo:G.month,yr:yr,msg:"🎉 "+yr+"赛季开启。旧争议被翻篇，新期待又压上来了。"});
+    }
+  }
+  var floorMaintPreview=0;Object.values(G.towers).forEach(function(tw2){(tw2.floors||[]).forEach(function(f){floorMaintPreview+=floorMaintCost(f,tw2).money})});
+  G.log.push({mo:G.month,yr:yr,msg:"📅 "+yr+"年"+MO[mo]+"｜AP+"+ap+"｜维护¥"+jM+"｜特派薪资¥"+iSal+(mo===11&&floorMaintPreview>0?"｜⚠️下月楼层维护¥"+floorMaintPreview:"")});
+  if(G.month>=6&&G.money<-8000){G.rep=Math.max(0,G.rep-7);G.log.push({mo:G.month,yr:yr,msg:"💥 财务危机外溢到口碑，口碑额外-5。"})}
+  if(G.month>=120){G.over=true;var e=calcEnd(G);G.ending=e.c>=.66?"good":e.c>=.33?"neutral":"bad";G.score=Math.round(e.c*1000)}
+  render();
+}
+function unlockTower(def){var c=(def.tier+1)*4;if(def.unlockRep&&G.rep<def.unlockRep)return;if(G.ap<c)return;G.ap-=c;G.towers[def.id]={id:def.id,name:def.name,tier:def.tier,bd:def.bd,bp:def.bp,board:def.board,floors:[],problems:[],trained:null,trainedSites:0,ranThisYear:false,suspended:false,lastResult:null,schedMonth:def.dm,regPrice:50,sites:1,story:def.story||""};selT=def.id;G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"🧱 你决定启动「"+def.name+"」。这不只是新增一项比赛，更像是在地图上点亮了一块新的信任区域。"});render()}
+function doAddFloor(tid,fd){var t=G.towers[tid];if(!t||G.ap<fd.ap||G.money<fd.cost)return;var cat=FCATS.find(function(c){return c.id===fd.cat});if(cat&&cat.ex&&t.floors.some(function(f){return f.cat===fd.cat}))return;if(!(cat&&cat.ex)&&t.floors.some(function(f){return f.id===fd.id}))return;G.ap-=fd.ap;G.money-=fd.cost;t.floors.push(Object.assign({},fd,{uid:uid()}));render()}
+function updTw(tid,key,val){var tw=G.towers[tid];if(!tw)return;var st=cSt(tw);if(key==="sites"){val=cl(val,1,st.maxSites);if(tw.trained&&val>(tw.trainedSites||0)){tw.trained=null;tw.trainedSites=0}}tw[key]=val;render()}
+function doAddLine(fr,to){var target=getComp(to);if(target&&target.minLineTier>=0&&(!G.towers[fr]||G.towers[fr].tier<target.minLineTier)){G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"⛔ 无法连接到「"+target.name+"」：起点级别还不够。"});render();return}if(G.ap<3)return;G.ap-=3;G.lines.push({from:fr,to:to,price:100,pass:.62,id:uid()});G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"🧭 你建立了「"+G.towers[fr].name+"→"+G.towers[to].name+"」这条晋级线。成长路径开始成形。"});bf=null;render()}
+function updLine(id,key,val){var l=G.lines.find(function(x){return x.id===id});if(l)l[key]=val;render()}
+function delLine(id){G.lines=G.lines.filter(function(x){return x.id!==id});render()}
+function doSignContract(sid){
+  var s=G.market.find(function(x){return x.id===sid});
+  if(!s||G.money<s.contractFee)return;
+  G.money-=s.contractFee;
+  G.contracts.push(Object.assign({},s,{usedThisMonth:0,asgn:[],used:0}));
+  G.market=G.market.filter(function(x){return x.id!==sid});
+  G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"📝 已与 "+s.nm+" 签订长期合约（¥"+s.contractFee+"），每题 ¥"+s.probPrice+"，每月最多 "+s.monthlyLimit+" 题。"});
+  render();
+}
+function doCancelContract(sid){
+  var s=G.contracts.find(function(x){return x.id===sid});
+  if(!s)return;
+  G.contracts=G.contracts.filter(function(x){return x.id!==sid});
+  G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"❌ 已解除与 "+s.nm+" 的合约。"});
+  render();
+}
+
+function doHire(s){if(G.money<s.cost)return;G.money-=s.cost;G.setters.push(Object.assign({},s,{asgn:[],used:0}));G.market=G.market.filter(function(x){return x.id!==s.id});render()}
+function doHireI(ins){if(G.money<ins.hire)return;G.money-=ins.hire;G.inspectors.push(ins);G.inspMkt=G.inspMkt.filter(function(x){return x.id!==ins.id});G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"🕵️ "+ins.nm+"加入协会。公平，不再只是口号。"});render()}
+function doFireI(id){G.inspectors=G.inspectors.filter(function(x){return x.id!==id});render()}
+function doAssign(sid,tid,idx){var s=G.setters.find(function(x){return x.id===sid})||G.contracts.find(function(x){return x.id===sid}),tw=G.towers[tid];if(!s||!tw)return;var isContract=G.contracts.some(function(x){return x.id===sid});if(isContract){if((s.usedThisMonth||0)>=s.monthlyLimit)return;if(G.money<s.probPrice)return;}else{if(s.used>=s.cap)return;}var st=cSt(tw),pD=cl(st.effD+Ru(-2,2),1,10),qu=cl(s.qu+Ru(-2,2),1,10),tag=Math.random()<.12?TAGS[Ru(0,2)]:null;if(!tw.problems)tw.problems=[];tw.problems[idx]={setter:s.nm,sid:s.id,qu:qu,diff:cl(pD,1,s.sk),tag:tag,idx:idx,probDiff:pD,verified:false,isContract:isContract};if(isContract){G.money-=s.probPrice;s.usedThisMonth=(s.usedThisMonth||0)+1;s.asgn=s.asgn||[];s.asgn.push({cid:tid,pi:idx});}else{s.used++;s.asgn.push({cid:tid,pi:idx});}render()}
+function doUnassign(sid,tid,idx){var s=G.setters.find(function(x){return x.id===sid})||G.contracts.find(function(x){return x.id===sid});if(!s)return;var isC=G.contracts.some(function(x){return x.id===sid});if(isC){s.usedThisMonth=Math.max(0,(s.usedThisMonth||0)-1);s.asgn=s.asgn?s.asgn.filter(function(a){return!(a.cid===tid&&a.pi===idx)}):[];}else{s.used=Math.max(0,s.used-1);s.asgn=s.asgn.filter(function(a){return!(a.cid===tid&&a.pi===idx)});}var tw=G.towers[tid];if(tw&&tw.problems)tw.problems[idx]=undefined;render()}
+function doAutoAssign(tid){var tw=G.towers[tid];if(!tw)return;var st=cSt(tw);for(var i=0;i<st.totP;i++){if(tw.problems&&tw.problems[i])continue;var freeH=G.setters.filter(function(s){return s.used<s.cap});var freeC=G.contracts.filter(function(s){return (s.usedThisMonth||0)<s.monthlyLimit&&G.money>=s.probPrice});var free=freeH.concat(freeC).sort(function(a,b){return b.qu-a.qu});if(!free.length)break;doAssign(free[0].id,tid,i)}}
+function doAutoTrain(tid){var tw=G.towers[tid];if(!tw)return;var sites=tw.sites||1;var levels=[["high",800],["mid",400],["low",150]];for(var i=0;i<levels.length;i++){var q=levels[i][0],c=trainCost(levels[i][1],sites);if(G.money>=c){G.money-=c;tw.trained=q;tw.trainedSites=sites;G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"🎓 "+tw.name+" 自动选择了「"+{low:"基础",mid:"标准",high:"高级"}[q]+"」培训（¥"+c+"）。"});render();return;}}G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"⚠️ "+tw.name+" 资金不足，无法完成任何档次的培训。"});render()}
+
+function doToggleAutoTrain(tid){var tw=G.towers[tid];if(!tw)return;tw.autoTrain=!tw.autoTrain;render()}
+
+function doToggleAutoProb(tid){var tw=G.towers[tid];if(!tw)return;tw.autoProb=!tw.autoProb;G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"🤖 "+tw.name+(tw.autoProb?" 已开启自动出题：开赛前自动从市场招募出题人并分配，招募费全额支付，出题人使用后即离开。":" 已关闭自动出题。")});render()}
+
+function doVerify(tid,idx){var tw=G.towers[tid];if(!tw||!tw.problems||!tw.problems[idx])return;var vc=verCost(tw.problems[idx].diff);if(G.money<vc)return;G.money-=vc;tw.problems[idx].verified=true;render()}
+function doTrain(tid,q){var tw=G.towers[tid],sites=tw?tw.sites||1:1,base={low:150,mid:400,high:800}[q],c=trainCost(base,sites);if(G.money<c)return;G.money-=c;tw.trained=q;tw.trainedSites=sites;render()}
+function doUpJ(){if(G.jIdx>=JUDGES.length-1)return;var nxt=JUDGES[G.jIdx+1];if(G.money<nxt.upg)return;G.money-=nxt.upg;G.jIdx++;G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"⚙️ 评测环境升级为「"+nxt.name+"」。技术底盘终于跟上你的野心。"});render()}
+function renderTutorialPanel(){if(!tutorialOpen)return '';var p=TUTORIAL_PAGES[tutorialPage]||TUTORIAL_PAGES[0];return '<div class="card"><div class="flex" style="justify-content:space-between;margin-bottom:8px"><div style="font-size:15px;font-weight:900;color:var(--acc)">📘 教程</div><div style="font-size:12px;color:var(--dim)">'+(tutorialPage+1)+' / '+TUTORIAL_PAGES.length+'</div></div><div class="story" style="margin-bottom:10px"><b>'+p.title+'</b><div style="font-size:13px;color:var(--dim);margin-top:4px">'+p.body+'</div></div><div class="flex" style="justify-content:space-between"><button class="btn '+(tutorialPage===0?'btn-dis':'')+'" id="tPrev" style="background:var(--line);color:#000">上一页</button><div class="flex"><button class="btn" id="startGuideBtn" style="background:var(--blue);color:#000">高亮引导</button><button class="btn '+(tutorialPage===TUTORIAL_PAGES.length-1?'btn-dis':'')+'" id="tNext" style="background:var(--acc);color:#000">下一页</button></div></div></div>'}
+function rollRandomEvent(yr){
+  if(G.month<6)return;
+  if(Math.random()>0.33)return;
+  var evts=[
+    {w:6,fn:function(){var g=Ru(800,3000);G.money+=g;G.log.push({mo:G.month,yr:yr,msg:"📼 一家科技公司主动联系，表示希望为协会提供小额赞助。获得 ¥"+g+"。"})}},
+    {w:5,fn:function(){var g=Ru(1500,5000);G.money+=g;G.log.push({mo:G.month,yr:yr,msg:"🏫 一所学校表示愿意赞助场地费用。获得 ¥"+g+"。"})}},
+    {w:8,fn:function(){var loss=Ru(2000,7000);G.money-=loss;G.log.push({mo:G.month,yr:yr,msg:"💸 服务器租约到期，不得不临时补缴费用。损失 ¥"+loss+"。"})}},
+    {w:7,fn:function(){G.rep=Math.max(0,+(G.rep-Ru(3,7)).toFixed(1));G.log.push({mo:G.month,yr:yr,msg:"📰 有媒体发布了一篇质疑收费合理性的文章，声誉受损。"})}},
+    {w:5,fn:function(){G.rep=+(G.rep+Ru(1,3)).toFixed(1);G.log.push({mo:G.month,yr:yr,msg:"🌟 一位知名选手在社交平台公开称赞赛题质量，声誉提升。"})}},
+    {w:4,fn:function(){var g=Ru(300,1500);G.ap+=Math.max(1,g/500|0);G.log.push({mo:G.month,yr:yr,msg:"🎓 一批新的志愿者加入协会，带来了额外的行动能力。"})}},
+    {w:6,fn:function(){G.rep=Math.max(0,+(G.rep-Ru(5,10)).toFixed(1));var loss=Ru(4000,12000);G.money-=loss;G.log.push({mo:G.month,yr:yr,msg:"⚠️ 评测机出现严重故障，紧急维修并引发舆论风波。声誉下降，损失 ¥"+loss+"。"})}},
+    {w:3,fn:function(){G.rep=+(G.rep+Ru(2,4)).toFixed(1);G.log.push({mo:G.month,yr:yr,msg:"🏆 协会在一次教育展上获得公开表扬，声誉明显提升。"})}}
+  ];
+  var total=evts.reduce(function(s,e){return s+e.w},0),r=Math.random()*total;
+  for(var i=0;i<evts.length;i++){r-=evts[i].w;if(r<=0){evts[i].fn();return}}
+  evts[evts.length-1].fn();
+}
+function calcScoreProjection(){
+  var e=calcEnd(G),d=e.detail,sc=calcFinalScore(G);
+  return {
+    total:sc.total,rep:sc.rep,money:sc.money,participation:sc.participation,
+    inspectors:sc.inspectors,stability:sc.stability,execution:sc.execution,
+    elite:sc.elite,lines:sc.lines,
+    ending:sc.total>=660?"good":sc.total>=330?"neutral":"bad"
+  };
+}
+function renderScorePanel(){
+  var sc=calcScoreProjection();
+  var endC=sc.ending==="good"?"var(--green)":sc.ending==="bad"?"var(--red)":"var(--gold)";
+  var endT=sc.ending==="good"?"良好结局":sc.ending==="bad"?"糟糕结局":"普通结局";
+  var bars=[["口碑",sc.rep],["财务",sc.money],["规模",sc.participation],["监督",sc.inspectors],
+            ["稳定",sc.stability],["执行",sc.execution],["高阶",sc.elite],["晋级线",sc.lines]];
+  var html='<div class="card"><div class="flex" style="justify-content:space-between;margin-bottom:8px">';
+  html+='<div style="font-size:15px;font-weight:900;color:var(--acc)">📈 得分投影</div>';
+  html+='<div style="font-size:20px;font-weight:900;color:'+endC+'">'+sc.total+'/1000</div></div>';
+  html+='<div style="font-size:12px;color:'+endC+';font-weight:900;margin-bottom:8px">预计结局：'+endT+'</div>';
+  bars.forEach(function(b){
+    var pct=Math.min(100,Math.max(0,b[1]));
+    var bc=pct>=70?"var(--green)":pct>=40?"var(--gold)":"var(--red)";
+    html+='<div style="margin-bottom:5px"><div class="flex" style="justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--dim)">'+b[0]+'</span><span style="color:'+bc+'">'+b[1]+'</span></div>';
+    html+='<div style="height:5px;border-radius:3px;background:var(--line)"><div style="height:5px;border-radius:3px;background:'+bc+';width:'+pct+'%"></div></div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+function renderChangelogModal(){
+  var ex=document.querySelector('.modal-bg.cl-modal');if(ex){ex.remove();changelogOpen=false;return}
+  changelogOpen=true;
+  var modal=document.createElement('div');modal.className='modal-bg cl-modal';
+  var inner='<div class="modal" style="max-width:680px"><div class="flex" style="justify-content:space-between;margin-bottom:18px"><span style="font-size:20px;font-weight:900;color:var(--acc)">📋 更新日志</span><button class="btn clClose" style="background:var(--red);color:#000">关闭</button></div>';
+  CHANGELOG.forEach(function(v){
+    inner+='<div style="margin-bottom:16px;padding:14px;border-radius:12px;background:var(--bg2);border:1px solid var(--line)">';
+    inner+='<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span style="font-weight:900;color:var(--acc)">'+v.ver+'</span><span style="font-size:12px;color:var(--dim)">'+v.date+'</span></div>';
+    inner+='<div style="font-size:13px;font-weight:900;margin-bottom:6px">'+v.title+'</div>';
+    v.items.forEach(function(it){inner+='<div style="font-size:12px;color:var(--dim);padding:2px 0">'+it+'</div>'});
+    inner+='</div>';
+  });
+  inner+='</div>';
+  modal.innerHTML=inner;modal.onclick=function(e){if(e.target===modal){modal.remove();changelogOpen=false}};
+  document.body.appendChild(modal);
+  modal.querySelector('.clClose').onclick=function(){modal.remove();changelogOpen=false};
+}
+function buildPreviewHTML(p,f){
+  var html='<div style="font-size:13px;font-weight:900;color:var(--acc);margin-bottom:10px">⚖️ 平衡预览</div>';
+  html+='<div style="font-size:12px;color:var(--dim);margin-bottom:8px">创建 <b style="color:'+p.tc+'">T'+f.tier+'</b> 赛事</div>';
+  html+='<div style="margin-bottom:6px;font-size:13px">AP花费：<b style="color:var(--gold)">'+p.apCost+' AP</b></div>';
+  html+='<div style="margin-bottom:6px;font-size:13px">最低算力：<b>'+p.minPow+'</b>（'+p.judgeNeeded.name+'）</div>';
+  html+='<div style="margin-bottom:6px;font-size:13px">预估参赛：<b style="color:var(--acc)">~'+p.estPart+' 人</b></div>';
+  html+='<div style="margin-bottom:6px;font-size:13px">题数范围：<b>'+f.bp+'～'+(f.bp+3)+'</b>（楼层可增加）</div>';
+  html+='<div style="margin-bottom:6px;font-size:13px">基础难度：<b>'+f.bd+'/10</b></div>';
+  html+='<div style="margin-top:10px;padding:8px;border-radius:8px;background:var(--bg);border:1px solid var(--line);font-size:12px;color:'+p.balanceColor+'"><b>'+p.balRating+'</b></div>';
+  if(!p.canAfford)html+='<div style="margin-top:8px;font-size:12px;color:var(--red)">⚠️ AP不足（需要'+p.apCost+'，当前'+(G?G.ap:0)+'）</div>';
+  return html;
+}
+function doCreateCustomComp(){
+  var f=customForm,apCost=(f.tier+1)*4;
+  if(!G||G.ap<apCost)return;
+  var id='custom_'+uid(),def={id:id,name:f.name||'自定义赛事',tier:f.tier,bd:f.bd,bp:f.bp,board:f.board,maxSites:f.maxSites||50,minLineTier:f.minLineTier,unlockRep:f.unlockRep||0,story:f.story||'一场自定义比赛。',isCustom:true};
+  G.customDefs.push(def);
+  G.ap-=apCost;
+  G.towers[id]={id:id,name:def.name,tier:def.tier,bd:def.bd,bp:def.bp,board:def.board,floors:[],problems:[],trained:null,trainedSites:0,ranThisYear:false,suspended:false,lastResult:null,schedMonth:3,regPrice:50,sites:1,story:def.story};
+  G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"🎨 自定义比赛《"+def.name+"》已创建（-"+apCost+" AP）。"});
+  var ex=document.querySelector('.modal-bg.cm-modal');if(ex){ex.remove();customModalOpen=false;}
+  render();
+}
+
+var ENDINGS={bad:{title:"BAD ENDING",sub:"比CCF还糟糕",c:"#ff4466",e:"💀",t:"十年后，人们提起你的协会，只会摇头。你本想重建秩序，最后却把行业信任又推低了一层。"},neutral:{title:"NEUTRAL ENDING",sub:"勉强维持",c:"#ffc844",e:"😐",t:"你让协会活了下来，也留下了一些还不错的赛季。但它没有真正改写时代。"},good:{title:"GOOD ENDING",sub:"超越CCF的传奇",c:"#22dd88",e:"🏆",t:"你把比赛办成了制度，把制度办成了文化。那是信息学竞赛重新被相信的开始。"}};
+const CHANGELOG=[
+  {ver:"v1.11",date:"2040-03",title:"出题人长期合约系统",items:["📝 新增出题人合约：支付签约费后可与出题人签订长期合约，按题收费（¥probPrice/题），每月有配额上限","📝 合约出题人不会在赛季结束后自动离队，可长期合作并随时解约","🛒 市场界面同时提供「一次性招募」和「签合约」两种选项，合约费通常高于单次招募费","📝 合约出题人在题目面板下拉框中标注合约信息（单价和月剩余配额）"]},
+{ver:"v1.10",date:"2039-12",title:"晋级线合理性得分重构",items:["📈 晋级线体系得分权重从 9% 提升至 21%（同时小幅降低声誉/参赛规模/其他维度权重以平衡总分）","📐 lineScore 改为连续覆盖率：所有非支线赛事中有多少比例可通过晋级线到达 NOI（原为二值判断）","📐 新增通过率合理性分项：28%~82% 的通过率视为合理，偏离过多会拉低得分","📐 新增层级梯度分项：晋级线层级差 1~3 视为理想阶梯，差距过大或过小会扣分","📐 综合得分 = 覆盖率 45% + 连贯性 25% + 通过率 15% + 层级梯度 15%"]},
+  {ver:"v1.9",date:"2039-09",title:"验题定价 · 一键/自动培训",items:["💰 验题费用改为按题目难度定价：¥300 + ¥250×难度（难度1约¥550，难度10约¥2800）","🎓 新增「⚡ 一键培训」按钮：自动选择当前可负担的最高培训档次","🔄 新增「自动培训」开关：每赛季开赛前自动执行一键培训，无需手动操作"]},
+{ver:"v1.8",date:"2039-06",title:"出题人机制重构 · 楼层维护缩放",items:["🤖 自动出题改为自动从市场招募出题人并分配（费用 = 出题人招募费），不再凭空生成","👤 出题人改为一次性合作：比赛结束后参与出题的出题人自动离队，需每赛季重新招募","🏗️ 设施类/活动类楼层维护费随考点数增长（每多1个考点 +40~50% 基础维护费）","🏗️ 楼层面板提示哪些楼层维护费会随规模增长"]},
+  {ver:"v1.7",date:"2039-03",title:"全面平衡重构",items:["⚖️ 初始资金/AP/声誉降低（普通 ¥12k/12AP/12声誉，困难 ¥5k/8AP/8声誉）","⚖️ 比赛经济重构：增加每位参赛者的可变成本，固定成本上调，降低收益率至 84%","⚖️ AP 获取速度放缓，楼层 AP/金钱成本全面提升","⚖️ 声誉自然衰减加快（普通 -0.15/月，困难 -0.22/月），翻车惩罚 -9（原 -6）","⚖️ 特派员雇佣费用 ×5（原 ×3），每月/赛后口碑加成降低约 40%","⚖️ 困难模式：收益 ×0.75，维护费 ×1.5，参赛人数 ×0.75（原 ×0.8）","⚖️ 随机事件重新调权：负面事件概率提升，奖励金额降低，惩罚力度加大"]},
+  {ver:"v1.6",date:"2038-12",title:"困难模式 · 参赛人数公式重构",items:["⚔️ 新增困难模式：初始资金/AP/声誉降低，收益×0.8，维护费×1.4，声誉衰减加快","📐 参赛人数改为线性公式，消除指数增长：高声誉下人数增长平缓，经济更难暴涨","📐 同步修复收入随参赛人数指数膨胀的问题"]},
+  {ver:"v1.5",date:"2038-09",title:"平衡调整 · 显示优化",items:["⚖️ 「为富不仁」触发阈值从 ¥120,000 提升至 ¥300,000","⚖️ 「为富不仁」声誉惩罚改为对数曲线：高资产时惩罚幅度显著收窄，不再线性暴涨","📊 参赛人数显示改为 ±30% 估算区间，不再精确展示实际数值","🗑 移除侧边栏得分投影面板，转由新闻板块提供定性反馈","👥 制作人员名单更新"]},
+  {ver:"v1.4",date:"2038-06",title:"自定义比赛 · 更新日志 · 无限延长运营",items:["✨ 新增「自定义比赛」功能：可自定义比赛名称、层级、题目数、难度等参数，系统自动进行平衡性预览","✨ 结算界面新增「继续运营」按钮：十年到期后可继续挑战，追求更高分","✨ 新增本更新日志面板，记录每次版本迭代","🔧 教程数值改为定性描述，减少对具体数值的依赖"]},
+  {ver:"v1.3",date:"2038-03",title:"教程优化",items:["🔧 教程中移除了所有精确数值（百分比、具体资金值等），改为定性引导","🔧 优化了各页教程的措辞与逻辑流畅度"]},
+  {ver:"v1.2",date:"2038-01",title:"系统完善",items:["✨ 新增随机事件系统（约每隔几个月触发一次）：包含赞助、舆论风波、服务器故障等多种类型","✨ 新增侧边栏得分投影面板，实时显示各维度完成度","✨ 比赛标签页新增赛季日历视图，清晰展示全年赛程安排","🔧 修复了声誉公式在高tier赛事下几乎不可能盈亏平衡的问题","🔧 修复了未配置晋级线的比赛在某些情况下仍能绕过限制的问题"]},
+  {ver:"v1.1",date:"2037-11",title:"教程与平衡",items:["✨ 新增15页详细教程（原为6页）","✨ 新增高亮引导步骤模式","🔧 修复了 render() 函数因多余括号导致的语法错误","🔧 平衡调整：高级别赛事盈亏平衡公式优化"]},
+  {ver:"v1.0",date:"2037-09",title:"初始版本",items:["🎮 核心经营循环：比赛解锁、出题、培训、晋级线、特派员、评测机升级","📊 十年结算：八维度评分系统","📰 侧边栏舆情新闻面板","📜 游戏日志系统"]}
+];
+function openCustomModal(){customModalOpen=true;customForm={name:'自定义赛事',tier:3,bd:4,bp:4,board:false,maxSites:50,minLineTier:-1,unlockRep:0,story:'一场由你亲手设计的比赛。'};renderCustomModal()}
+function buildCustomPreview(f){
+  var apCost=(f.tier+1)*4,minPow=Math.ceil(f.tier*1.2)+1,judgeNeeded=JUDGES.find(function(j){return j.pow>=minPow})||JUDGES[JUDGES.length-1];
+  var baseRep=G?G.rep:15;
+  var estBase=f.tier<=1?Math.round(40+3.2*baseRep-f.bd*3):Math.round(15+2.5*baseRep-f.bd*2);
+  var estPart=Math.max(5,Math.round(estBase*priceParticipationMultiplier(80)));
+  var canAfford=G&&G.ap>=apCost,tc=TC[f.tier]||'#888';
+  var balanceColor=f.tier<=2?'var(--green)':f.tier<=5?'var(--gold)':f.tier<=8?'var(--orange)':'var(--red)';
+  var balRating=f.tier<=2?'入门友好，参赛人数多，适合积累资金':f.tier<=4?'中级赛事，口碑和收入平衡':f.tier<=6?'高级赛事，对出题和评测机要求高':f.tier<=9?'精英赛事，参赛人数少但声誉加成显著':'顶级赛事，极难举办但声誉天花板最高';
+  return {apCost:apCost,minPow:minPow,judgeNeeded:judgeNeeded,estPart:estPart,canAfford:canAfford,tc:tc,balanceColor:balanceColor,balRating:balRating};
+}
+function renderCustomModal(){
+  var ex=document.querySelector('.modal-bg.cm-modal');
+  if(ex){ex.remove();}
+  if(!customModalOpen)return;
+  var f=customForm,p=buildCustomPreview(f);
+  var modal=document.createElement('div');modal.className='modal-bg cm-modal';
+  var inner='<div class="modal" style="max-width:780px"><div class="flex" style="justify-content:space-between;margin-bottom:18px"><span style="font-size:20px;font-weight:900;color:var(--acc)">🎨 创建自定义比赛</span><button class="btn cmClose" style="background:var(--red);color:#000">关闭</button></div>';
+  inner+='<div style="display:grid;grid-template-columns:1fr 300px;gap:18px">';
+  inner+='<div>';
+  inner+='<div style="margin-bottom:14px"><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">比赛名称</label><input type="text" id="cmName" class="inp" value="'+esc(f.name)+'" style="width:100%;text-align:left;max-width:340px"></div>';
+  inner+='<div style="margin-bottom:14px"><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">比赛层级 <b id="cmTierLbl" style="color:'+p.tc+'">T'+f.tier+'</b> <span style="font-size:12px;color:var(--dim)">（解锁成本 <span id="cmApCostLbl">'+p.apCost+'</span> AP）</span></label><input type="range" id="cmTier" min="0" max="11" value="'+f.tier+'" style="width:100%;accent-color:'+p.tc+'"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim)"><span>T0 初级</span><span>T5 NOIP级</span><span>T11 IOI级</span></div></div>';
+  inner+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">';
+  inner+='<div><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">基础难度 <b id="cmBdLbl">'+f.bd+'</b></label><input type="range" id="cmBd" min="1" max="10" value="'+f.bd+'" style="width:100%"></div>';
+  inner+='<div><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">基础题数 <b id="cmBpLbl">'+f.bp+'</b></label><input type="range" id="cmBp" min="2" max="8" value="'+f.bp+'" style="width:100%"></div>';
+  inner+='<div><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">考点上限</label><input type="number" id="cmSites" class="inp" value="'+f.maxSites+'" min="1" max="100" style="width:90px"></div>';
+  inner+='<div><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">解锁声誉要求</label><input type="number" id="cmRep" class="inp" value="'+f.unlockRep+'" min="0" max="100" style="width:90px"></div>';
+  inner+='<div><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">最低晋级线层级 <span style="color:var(--dim);font-size:11px">（-1=不限）</span></label><input type="number" id="cmMinLine" class="inp" value="'+f.minLineTier+'" min="-1" max="11" style="width:90px"></div>';
+  inner+='<div><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">含住宿板卡</label><select id="cmBoard" class="inp" style="width:90px"><option value="0"'+(f.board?'':' selected')+'>否</option><option value="1"'+(f.board?' selected':'')+'>是</option></select></div>';
+  inner+='</div>';
+  inner+='<div style="margin-bottom:14px"><label style="font-size:13px;font-weight:900;color:var(--dim);display:block;margin-bottom:4px">剧情文本</label><textarea id="cmStory" style="width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px;font:inherit;resize:vertical;min-height:60px">'+esc(f.story)+'</textarea></div>';
+  inner+='</div>';
+  // Right: balance preview
+  inner+='<div><div class="card" style="background:var(--bg2)" id="cmPreviewCard">'+buildPreviewHTML(p,f)+'</div>';
+  inner+='<div style="margin-top:10px"><button class="btn cmConfirm'+(p.canAfford?'':' btn-dis')+'" id="cmConfirmBtn" style="width:100%;background:var(--acc);color:#000;padding:12px">确认创建（-'+p.apCost+' AP）</button></div></div>';
+  inner+='</div></div>';
+  modal.innerHTML=inner;
+  modal.onclick=function(e){if(e.target===modal){customModalOpen=false;modal.remove()}};
+  document.body.appendChild(modal);
+  modal.querySelector('.cmClose').onclick=function(){customModalOpen=false;modal.remove()};
+  function readForm(){
+    customForm.name=modal.querySelector('#cmName').value||'自定义赛事';
+    customForm.tier=parseInt(modal.querySelector('#cmTier').value)||0;
+    customForm.bd=parseInt(modal.querySelector('#cmBd').value)||1;
+    customForm.bp=parseInt(modal.querySelector('#cmBp').value)||2;
+    customForm.board=modal.querySelector('#cmBoard').value==='1';
+    customForm.maxSites=parseInt(modal.querySelector('#cmSites').value)||50;
+    customForm.minLineTier=parseInt(modal.querySelector('#cmMinLine').value);if(isNaN(customForm.minLineTier))customForm.minLineTier=-1;
+    customForm.unlockRep=parseInt(modal.querySelector('#cmRep').value)||0;
+    customForm.story=modal.querySelector('#cmStory').value||'自定义比赛。';
+  }
+  function updatePreview(){
+    var f2=customForm,p2=buildCustomPreview(f2);
+    var tl=modal.querySelector('#cmTierLbl');if(tl){tl.textContent='T'+f2.tier;tl.style.color=p2.tc;}
+    var al=modal.querySelector('#cmApCostLbl');if(al)al.textContent=p2.apCost;
+    var bl=modal.querySelector('#cmBdLbl');if(bl)bl.textContent=f2.bd;
+    var bpl=modal.querySelector('#cmBpLbl');if(bpl)bpl.textContent=f2.bp;
+    var prev=modal.querySelector('#cmPreviewCard');if(prev)prev.innerHTML=buildPreviewHTML(p2,f2);
+    var cb=modal.querySelector('#cmConfirmBtn');
+    if(cb){cb.textContent='确认创建（-'+p2.apCost+' AP）';cb.classList.toggle('btn-dis',!p2.canAfford);cb.onclick=p2.canAfford?function(){doCreateCustomComp()}:null;}
+  }
+  ['#cmName','#cmTier','#cmBd','#cmBp','#cmSites','#cmRep','#cmMinLine','#cmBoard','#cmStory'].forEach(function(sel){
+    var el=modal.querySelector(sel);if(el)el.addEventListener('input',function(){readForm();updatePreview()});
+  });
+  var confirmBtn=modal.querySelector('#cmConfirmBtn');
+  if(confirmBtn&&p.canAfford)confirmBtn.onclick=function(){doCreateCustomComp()};
+}
+function renderNewsPanel(){var curMo=G.month%12,curYr=G.year+Math.floor(G.month/12),news=genNews(G),html='<div class="card"><div style="font-size:15px;font-weight:900;color:var(--acc);margin-bottom:8px">📰 右侧新闻</div><div style="font-size:12px;color:var(--dim);margin-bottom:10px">'+curYr+'年'+MO[curMo]+' · 实时舆情</div>';if(!news.length)html+='<div style="color:var(--dim)">暂无明显舆情变化</div>';else news.slice(0,6).forEach(function(n){html+='<div class="news-card" style="border-left-color:'+n.c+'"><div class="flex" style="margin-bottom:4px"><span>'+n.icon+'</span><span style="font-weight:900;color:'+n.c+'">'+n.t+'</span></div><div style="font-size:13px">'+n.m+'</div></div>'});html+='</div>';return html}
+function renderLogPanel(){var html='<div class="card bottom-log"><div style="font-size:15px;font-weight:900;color:var(--acc);margin-bottom:8px">📜 下方日志</div><div style="max-height:320px;overflow:auto">';G.log.slice().reverse().forEach(function(l){html+='<div style="padding:4px 0;border-bottom:1px solid rgba(36,48,77,.15);font-size:13px"><span style="color:var(--dim);margin-right:6px">['+l.yr+'·'+MO[(l.mo||0)%12]+']</span>'+l.msg+'</div>'});html+='</div></div>';return html}
+function renderGuideOverlay(){if(!guideActive)return '';var p=TUTORIAL_PAGES[tutorialPage]||TUTORIAL_PAGES[0];return '<div class="guide-bubble" id="guideBubble"><div style="font-weight:900;color:var(--acc);margin-bottom:4px">'+p.title+'</div><div style="font-size:13px;color:var(--dim)">'+p.body+'</div><div class="flex" style="justify-content:space-between;margin-top:10px"><button class="btn" id="guideSkip" style="background:var(--line);color:#000">跳过</button><div class="flex"><button class="btn '+(tutorialPage===0?'btn-dis':'')+'" id="guidePrev" style="background:var(--purple);color:#000">上一步</button><button class="btn" id="guideNext" style="background:var(--gold);color:#000">'+(tutorialPage===TUTORIAL_PAGES.length-1?'完成':'下一步')+'</button></div></div></div>'}
+function positionGuide(){if(!guideActive)return;document.querySelectorAll('.guide-focus').forEach(function(n){n.classList.remove('guide-focus')});var p=TUTORIAL_PAGES[tutorialPage]||TUTORIAL_PAGES[0],el=document.querySelector(p.selector);if(el){el.classList.add('guide-focus');var r=el.getBoundingClientRect(),bubble=document.getElementById('guideBubble');if(bubble){bubble.style.left=Math.min(window.innerWidth-bubble.offsetWidth-16,Math.max(16,r.left))+'px';bubble.style.top=Math.min(window.innerHeight-bubble.offsetHeight-16,Math.max(16,r.bottom+12))+'px'}}}
+function render(){
+  applyTheme();
+  var app=document.getElementById('app');app.innerHTML='';
+  if(screen==='menu'){
+    var hmBg=menuHardMode?'rgba(255,68,102,.12)':'var(--bg2)',hmBdr=menuHardMode?'var(--red)':'var(--line)',hmBtn=menuHardMode?'var(--red)':'var(--line)',hmLabel=menuHardMode?'⚔️ 困难模式：已开启':'⚔️ 困难模式：已关闭';
+    app.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;text-align:center;position:relative"><div style="position:absolute;inset:0;opacity:.05;background-image:repeating-linear-gradient(0deg,var(--acc) 0 1px,transparent 1px 56px),repeating-linear-gradient(90deg,var(--acc) 0 1px,transparent 1px 56px)"></div><div style="position:relative;z-index:1;max-width:760px"><div style="font-size:12px;letter-spacing:8px;color:var(--dim);margin-bottom:18px">EST. 2037 · POST-CCF ERA</div><div style="font-size:56px;font-weight:900;letter-spacing:4px;color:var(--acc);line-height:1.05;margin-bottom:6px">OI协会</div><div style="font-size:30px;font-weight:900;letter-spacing:6px;margin-bottom:22px">模拟器</div><div class="story" style="text-align:left;font-size:16px;line-height:2;margin-bottom:16px"><p style="color:var(--gold);font-weight:900;margin-bottom:6px">📜 剧情背景</p><p><b style="color:var(--red)">CCF</b> 在2037年彻底谢幕。多年争议、收费风波与信任坍塌，终于让旧时代落幕。</p><p>而你，拿到了重建竞赛体系的许可。你手里有一点启动资金、有限的行动点，以及整个圈子半信半疑的注视。</p><p style="font-weight:900">接下来的十年，你要回答一个问题：你会重建秩序，还是重复历史？</p></div>'+'<div style="margin-bottom:20px;padding:14px 20px;border-radius:14px;border:1px solid '+hmBdr+';display:inline-block;background:'+hmBg+'"><div style="font-size:11px;font-weight:900;letter-spacing:3px;color:var(--dim);margin-bottom:8px">GAME MODE</div><div class="flex" style="align-items:center;gap:14px"><button id="hardModeBtn" class="btn" style="background:'+hmBtn+';color:#000;font-size:14px;padding:10px 22px;font-weight:900">'+hmLabel+'</button><div style="text-align:left;font-size:12px;color:var(--dim)">初始资金/AP/声誉减少<br>收益×0.8 · 维护费×1.4 · 衰减加快</div></div></div>'+'<div class="flex" style="justify-content:center"><button id="startBtn" class="btn" style="padding:18px 64px;background:var(--acc);color:#000;font-size:18px;letter-spacing:4px">开始经营</button><button id="themeBtnMenu" class="btn" style="padding:18px 24px;background:var(--gold);color:#000">切换亮/暗</button><button id="creditsBtn" class="btn" style="padding:18px 24px;background:var(--purple);color:#000">制作人员</button></div></div></div>';
+    document.getElementById('startBtn').onclick=function(){G=initG();screen='game';tab='matches';tutorialOpen=true;guideActive=true;render()};
+    document.getElementById('hardModeBtn').onclick=function(){menuHardMode=!menuHardMode;render()};
+    document.getElementById('themeBtnMenu').onclick=function(){if(!G)G=initG();toggleTheme()};
+    document.getElementById('creditsBtn').onclick=function(){screen='credits';render()};
+    return;
+  }
+  if(screen==='credits'){
+    app.innerHTML='<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;position:relative"><div style="position:absolute;inset:0;opacity:.04;background-image:repeating-linear-gradient(0deg,var(--acc) 0 1px,transparent 1px 56px),repeating-linear-gradient(90deg,var(--acc) 0 1px,transparent 1px 56px)"></div><div style="position:relative;z-index:1;max-width:680px;width:100%"><div style="text-align:center;margin-bottom:36px"><div style="font-size:48px;margin-bottom:8px">🏆</div><div style="font-size:28px;font-weight:900;color:var(--acc);letter-spacing:4px;margin-bottom:4px">制作人员</div><div style="font-size:13px;color:var(--dim);letter-spacing:6px">CREDITS</div></div>'
+    +'<div class="card" style="margin-bottom:14px"><div style="font-size:11px;font-weight:900;letter-spacing:4px;color:var(--dim);margin-bottom:14px">👥 制作团队</div><div style="display:grid;gap:0"><div style="padding:12px 0;border-bottom:1px solid var(--line)"><div style="font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:4px">负责人</div><div style="font-weight:900;font-size:16px">wurang</div><div style="font-size:12px;color:var(--dim);margin-top:2px">uid 836786</div></div><div style="padding:12px 0;border-bottom:1px solid var(--line)"><div style="font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:4px">主要开发人员</div><div style="font-weight:900;font-size:16px">NegetiveEdgeWeight</div><div style="font-size:12px;color:var(--dim);margin-top:2px">又称 Joshuaurora · uid 1210193</div></div><div style="padding:12px 0;border-bottom:1px solid var(--line)"><div style="font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:4px">AI 辅助开发</div><div style="font-weight:900;font-size:15px">Claude (Anthropic)</div><div style="font-size:12px;color:var(--dim);margin-top:2px">代码实现与迭代</div></div><div style="padding:12px 0"><div style="font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:4px">问题反馈</div><div style="font-size:13px;color:var(--text)">如有 Bug 或建议，请私信 Luogu <b style="color:var(--acc)">uid 1210193</b></div></div></div></div>'
+    +'<div class="card" style="margin-bottom:14px"><div style="font-size:11px;font-weight:900;letter-spacing:4px;color:var(--dim);margin-bottom:14px">📖 LORE & INSPIRATION</div><div style="font-size:14px;color:var(--dim);line-height:1.9">本游戏的世界观基于对中国信息学竞赛（OI）生态的想象性演绎。所有组织名称、人物、事件均为<b style="color:var(--text)">虚构创作</b>，与现实中任何机构、个人无关。<br><br>灵感来源于对竞赛公平性、体系化建设与组织透明度的思考。</div></div>'
+    +'<div class="card" style="margin-bottom:14px"><div style="font-size:11px;font-weight:900;letter-spacing:4px;color:var(--dim);margin-bottom:14px">🛠 TECHNOLOGY</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px"><div class="story" style="padding:10px"><div style="font-weight:900;color:var(--acc)">运行环境</div><div style="color:var(--dim);margin-top:4px">纯浏览器 · 零依赖<br>单文件 HTML/CSS/JS</div></div><div class="story" style="padding:10px"><div style="font-weight:900;color:var(--acc)">版本</div><div style="color:var(--dim);margin-top:4px">v1.4<br>2038年6月</div></div><div class="story" style="padding:10px"><div style="font-weight:900;color:var(--acc)">数据持久化</div><div style="color:var(--dim);margin-top:4px">主题设置存 localStorage<br>游戏进度存内存</div></div><div class="story" style="padding:10px"><div style="font-weight:900;color:var(--acc)">兼容性</div><div style="color:var(--dim);margin-top:4px">现代浏览器<br>桌面端最佳</div></div></div></div>'
+    +'<div class="card" style="margin-bottom:28px;text-align:center;background:linear-gradient(135deg,rgba(0,221,179,.06),rgba(86,166,255,.04));border-color:rgba(0,221,179,.2)"><div style="font-size:13px;color:var(--dim);line-height:2">感谢每一位愿意在废墟上重建秩序的玩家。<br><b style="color:var(--acc)">信任不是喊出来的，是办出来的。</b></div></div>'
+    +'<div style="text-align:center"><button id="backMenuBtn" class="btn" style="background:var(--acc);color:#000;padding:14px 48px;font-size:16px">← 返回菜单</button></div></div></div>';
+    document.getElementById('backMenuBtn').onclick=function(){screen='menu';render()};
+    return;
+  }
+  if(G.over){
+    var ed=ENDINGS[G.ending],e=calcEnd(G),sc=calcFinalScore(G);
+    app.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px;text-align:center"><div style="font-size:72px;margin-bottom:10px">'+ed.e+'</div><div style="font-size:12px;letter-spacing:7px;color:var(--dim);margin-bottom:4px">'+ed.title+'</div><div style="font-size:34px;font-weight:900;color:'+ed.c+';margin-bottom:10px">'+ed.sub+'</div><div style="max-width:620px;font-size:16px;color:var(--dim);line-height:1.9;margin-bottom:24px">'+ed.t+'</div><div style="font-size:64px;font-weight:900;color:var(--acc);margin-bottom:20px">'+sc.total+'<span style="font-size:16px;color:var(--dim)">/1000</span></div><div class="card" style="max-width:920px;width:100%;text-align:left;margin-bottom:18px"><div style="font-size:16px;font-weight:900;color:var(--acc);margin-bottom:10px">📊 综合评分</div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"><div><div style="font-size:12px;color:var(--dim)">口碑</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.rep+'</div></div><div><div style="font-size:12px;color:var(--dim)">财务健康</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.money+'</div></div><div><div style="font-size:12px;color:var(--dim)">参赛规模</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.participation+'</div></div><div><div style="font-size:12px;color:var(--dim)">监督体系</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.inspectors+'</div></div><div><div style="font-size:12px;color:var(--dim)">稳定性</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.stability+'</div></div><div><div style="font-size:12px;color:var(--dim)">执行质量</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.execution+'</div></div><div><div style="font-size:12px;color:var(--dim)">高阶赛事</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.elite+'</div></div><div><div style="font-size:12px;color:var(--dim)">晋级线体系</div><div style="font-size:26px;font-weight:900;color:var(--gold)">'+sc.lines+'</div></div></div></div><div class="flex" style="justify-content:center;margin-bottom:24px"><div class="card" style="padding:14px;min-width:110px"><div style="color:var(--gold);font-size:26px;font-weight:900">'+G.rep+'</div><div style="color:var(--dim);font-size:12px">声誉</div></div><div class="card" style="padding:14px;min-width:110px"><div style="color:var(--green);font-size:26px;font-weight:900">¥'+G.money+'</div><div style="color:var(--dim);font-size:12px">资金</div></div><div class="card" style="padding:14px;min-width:110px"><div style="color:var(--acc);font-size:26px;font-weight:900">'+e.tp+'</div><div style="color:var(--dim);font-size:12px">总人次</div></div></div><div class="card" style="max-width:680px;width:100%;margin-bottom:20px;text-align:left;background:rgba(0,221,179,.06);border-color:rgba(0,221,179,.2)"><div style="font-size:13px;font-weight:900;color:var(--acc);margin-bottom:4px">🔄 继续运营</div><div style="font-size:13px;color:var(--dim)">评分已锁定，继续经营不会改变结局——但你可以继续打磨体系、探索更多可能。</div></div><div class="flex" style="justify-content:center"><button id="continueBtn" class="btn" style="background:var(--acc);color:#000;padding:12px 28px">继续运营</button><button id="replayBtn" class="btn" style="background:var(--blue);color:#000;padding:12px 28px">再来一局</button><button id="menuBtn" class="btn" style="background:var(--line);color:#000;padding:12px 28px">返回菜单</button></div></div>';
+    document.getElementById('continueBtn').onclick=function(){G.over=false;G.log.push({mo:G.month,yr:G.year+Math.floor(G.month/12),msg:"🔄 十年结算已完成，协会决定继续运营。评分已锁定，继续经营不会改变结局。"});render()};
+    document.getElementById('replayBtn').onclick=function(){G=initG();screen='game';tab='matches';tutorialOpen=true;guideActive=true;render()};
+    document.getElementById('menuBtn').onclick=function(){screen='menu';render()};
+    document.getElementById('creditsEndBtn').onclick=function(){screen='credits';render()};
+    return;
+  }
+  if(G.hard)html+='<div style="background:var(--red);color:#000;text-align:center;font-size:12px;font-weight:900;letter-spacing:3px;padding:4px">⚔️ 困难模式</div>';
+  var curMo=G.month%12,curYr=G.year+Math.floor(G.month/12),judge=JUDGES[G.jIdx],jMnt=Math.round(judge.mnt*(1+Math.floor(G.month/12)*.05)),iSal=G.inspectors.reduce(function(s,i){return s+i.sal},0),dailyAP=3+Math.floor(G.rep/10)+Object.values(G.towers).reduce(function(s,t){return s+Math.floor((t.floors||[]).length/2)},0),tids=Object.keys(G.towers),html='';
+  html+='<div class="header"><div class="flex" style="justify-content:space-between"><div class="flex"><span id="logoBtn" style="font-size:16px;font-weight:900;color:var(--acc);cursor:pointer">OI协会</span><span style="font-size:14px"><b style="color:var(--gold);font-size:18px">'+curYr+'</b>年<b style="color:var(--acc);font-size:18px;margin-left:4px">'+MO[curMo]+'</b></span></div><div class="flex"><button class="btn" style="background:var(--acc);color:#000" id="adv1">+1月</button><button class="btn" style="background:var(--blue);color:#000" id="adv3">+3月</button><button class="btn" style="background:var(--purple);color:#000" id="adv12">+1年</button><button class="btn" style="background:var(--blue);color:#000" id="tutorialBtn">📘 教程</button><button class="btn" style="background:var(--line);color:var(--text)" id="changelogBtn">📋 更新日志</button><button class="btn" style="background:var(--gold);color:#000" id="themeBtn">亮/暗</button><button class="btn" style="background:var(--red);color:#000" id="homeBtn">重开</button></div></div><div class="flex" style="margin-top:8px"><div style="flex:1"><div style="font-size:11px;color:var(--dim)">赛季进度</div><div class="progress"><div style="width:'+(curMo/12*100)+'%;background:var(--acc)"></div></div></div><div style="flex:1"><div style="font-size:11px;color:var(--dim)">总进度 '+G.month+'月'+(G.month>120?' (延长运营)':'/120')+'</div><div class="progress"><div style="width:'+Math.min(100,G.month/120*100)+'%;background:var(--gold)"></div></div></div></div></div>';
+  if(G.warnings.length){html+='<div class="warn-bar">';G.warnings.forEach(function(w){html+='<div style="font-size:13px;color:var(--orange)">⚠️ <b>'+w.name+'</b> '+w.ml+'个月后开赛：'+w.issues.join('，')+' <button class="btn warngo" data-tid="'+w.tid+'" style="background:var(--orange);color:#000;padding:2px 8px;font-size:11px">前往处理</button></div>'});html+='</div>'}
+  html+='<div class="stat-bar">';
+  [["💰","¥"+G.money,"var(--gold)","资金。用于招募、升级、买楼层、培训、办赛。"],["⚡",G.ap+"(每月+"+dailyAP+")","var(--acc)","行动点。用于解锁比赛、添加晋级线、添加楼层。"],["⭐","声誉 "+G.rep,"var(--pink)","口碑越高，自然参赛人数越高，也会逐步解锁国家队选拔、国家队集训和 IOI。前6个月是隐形观察期。"],["🖥️",judge.name,"var(--purple)","当前评测环境。算力不足会直接导致比赛翻车。"],["🕵️","特派员 "+G.inspectors.length,"var(--blue)","监督体系。能持续增加口碑，并提升比赛后的结算表现。"]].forEach(function(s){html+='<div class="stat tip" data-tip="'+esc(s[3])+'" style="background:'+s[2]+'0c;border:1px solid '+s[2]+'15"><span>'+s[0]+'</span><b style="color:'+s[2]+'">'+s[1]+'</b></div>'});
+  html+='<div class="stat tip" data-tip="评测机维护费 + 特派员工资。" style="background:var(--red)0c;border:1px solid var(--red)15"><span>📤</span><span style="color:var(--red)">月支出 ¥'+(jMnt+iSal)+'</span></div></div>';
+  [["matches","🏁 比赛"],["lines","🧭 晋级线"],["setters","👤 出题人"],["insp","🕵️ 特派员"],["judge","⚙️ 评测"],["hist","📊 历史"]].forEach(function(t,i){if(i===0)html+='<div class="tabs">';html+='<button class="tab'+(tab===t[0]?' active':'')+' tabBtn" data-tab="'+t[0]+'">'+t[1]+'</button>';if(i===5)html+='</div>'});
+  html+='<div class="main"><div class="dashboard"><div>';
+  if(tab==='matches'){
+    var unbuilt=COMPS.filter(function(d){return !G.towers[d.id]&&(!d.unlockRep||G.rep>=d.unlockRep)}),lockedByRep=COMPS.filter(function(d){return !G.towers[d.id]&&d.unlockRep&&G.rep<d.unlockRep});
+    if(unbuilt.length){html+='<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:900;color:var(--dim);margin-bottom:6px">🔒 可创建比赛</div><div class="flex">';unbuilt.forEach(function(d){var c=(d.tier+1)*4,dis=G.ap<c;html+='<button class="btn unlockBtn'+(dis?' btn-dis':'')+'" data-id="'+d.id+'" style="background:'+(dis?'':(TC[d.tier]||'#888'))+';color:#000">'+d.name+'（'+c+'AP）</button>'});if(G.allowCustom)html+='<button class="btn" id="customCompBtn" style="background:linear-gradient(135deg,var(--purple),var(--blue));color:#000">🎨 自定义比赛</button>';html+='</div></div>'}
+    else if(G.allowCustom){html+='<div style="margin-bottom:14px"><div class="flex"><button class="btn" id="customCompBtn" style="background:linear-gradient(135deg,var(--purple),var(--blue));color:#000">🎨 自定义比赛</button></div></div>'}
+    if(lockedByRep.length){html+='<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:900;color:var(--dim);margin-bottom:6px">🌟 口碑解锁比赛</div><div class="grid grid-auto">';lockedByRep.forEach(function(d){html+='<div class="card" style="padding:12px;opacity:.82"><div style="font-weight:900;color:'+(TC[d.tier]||'#888')+'">'+d.name+'</div><div style="font-size:12px;color:var(--dim);margin-top:4px">需要口碑达到 '+d.unlockRep+' 才会开放。</div></div>'});html+='</div></div>'}
+    if(!tids.length) html+='<div class="card" style="text-align:center;color:var(--dim);padding:36px">你还没有启动任何比赛。第一步，先办出第一场能被看见的比赛。</div>';
+    else{
+      html+='<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-bottom:10px">';tids.forEach(function(id){var t=G.towers[id],tc=TC[t.tier]||'#888',ep=estP(t,G.rep,G.lines,G.towers),ml=((t.schedMonth-curMo)+12)%12,urg=ml>0&&ml<=2&&!t.ranThisYear,bdrC=selT===id?'var(--acc)':urg?'var(--orange)':t.suspended?'var(--red)':'var(--line)';html+='<div class="card matchCard" data-id="'+id+'" style="border-color:'+bdrC+';border-width:'+(selT===id?'2px':'1px')+'"><div class="flex" style="justify-content:space-between;margin-bottom:8px"><span style="font-weight:900;color:'+tc+'">'+t.name+'</span>'+(t.ranThisYear?'<span style="font-size:11px;color:var(--green)">✅ 已完赛</span>':'')+(t.suspended?'<span style="font-size:11px;color:var(--red)">⛔ 翻车</span>':'')+'</div>';(t.floors||[]).slice().reverse().forEach(function(f){var cc=FCATS.find(function(c){return c.id===f.cat});html+='<div style="font-size:12px;padding:4px 6px;margin-bottom:3px;border-left:2px solid '+(cc?cc.c:'#666')+';color:'+(cc?cc.c:'#666')+'">'+f.icon+' '+f.name+'</div>'});if(!(t.floors||[]).length)html+='<div style="font-size:12px;color:var(--dim)">还没有添加运营楼层</div>';html+='<div style="font-size:12px;color:var(--dim);margin-top:6px">'+MO[t.schedMonth]+' 开赛 · 预计 '+epRange(ep)+' 人 · 考点上限 '+cSt(t).maxSites+'</div></div>'});html+='</div>';
+      // Calendar view
+      var calRows=[];for(var mi=0;mi<12;mi++){var inMo=tids.filter(function(id){return G.towers[id].schedMonth===mi});if(inMo.length)calRows.push({mo:mi,ids:inMo})}
+      if(calRows.length){
+        html+='<div class="card" style="margin-bottom:10px"><div style="font-size:13px;font-weight:900;color:var(--dim);margin-bottom:8px">📅 赛季日历 <span style="font-size:11px;font-weight:400">（当前：'+MO[curMo]+'）</span></div><div style="display:grid;gap:4px">';
+        calRows.forEach(function(row){
+          var isNow=row.mo===curMo,isMissed=((row.mo-curMo+12)%12)>6&&row.ids.some(function(id){return !G.towers[id].ranThisYear});
+          html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:'+(isNow?'var(--acc)20':'var(--bg2)')+';border:1px solid '+(isNow?'var(--acc)':'var(--line)')+'">';
+          html+='<span style="min-width:36px;font-weight:900;font-size:12px;color:'+(isNow?'var(--acc)':'var(--dim)')+'">'+MO[row.mo]+'</span>';
+          row.ids.forEach(function(id){
+            var t=G.towers[id],tc=TC[t.tier]||'#888',done=t.ranThisYear,sus=t.suspended;
+            html+='<span class="pill matchCard" data-id="'+id+'" style="background:'+tc+'18;color:'+tc+';cursor:pointer;border:1px solid '+tc+'30">'+(done?'✅ ':sus?'⛔ ':'')+t.name+'</span>';
+          });
+          html+='</div>';
+        });
+        html+='</div></div>';
+      }
+    }
+    if(selT&&G.towers[selT]){
+      var t=G.towers[selT],st=cSt(t),tc=TC[t.tier]||'#888',pDone=(t.problems||[]).filter(Boolean).length,jPow=JUDGES[G.jIdx].pow,minPow=Math.ceil(t.tier*1.2)+1,ml=((t.schedMonth-curMo)+12)%12||12,ep=estP(t,G.rep,G.lines,G.towers),sites=t.sites||1,tCL=trainCost(150,sites),tCM=trainCost(400,sites),tCH=trainCost(800,sites),costs=compCost(t,ep),needRetrain=t.trained&&sites>(t.trainedSites||0),priceMul=priceParticipationMultiplier(t.regPrice||50),needsLine=st.minLineTier>=0;
+      html+='<div class="card"><div style="font-size:22px;font-weight:900;color:'+tc+';margin-bottom:4px">'+t.name+' <span style="font-size:13px;color:var(--dim);font-weight:500">T'+t.tier+' · '+(t.floors||[]).length+'层</span></div><div class="story"><div style="font-size:12px;color:var(--gold);font-weight:900;margin-bottom:4px">剧情提示</div><div style="font-size:14px">'+t.story+'</div></div><details class="comp-detail"><summary>📘 比赛详情（点击展开）</summary><div class="details-grid"><div class="mono-dim">基础难度</div><div>'+t.bd+'，决定比赛本底强度。</div><div class="mono-dim">基础题数</div><div>'+t.bp+'，题目加量后会更多。</div><div class="mono-dim">比赛层级</div><div>'+t.tier+'，越高越吃算力、品牌和晋级线体系。</div><div class="mono-dim">收费</div><div>¥'+(t.regPrice||50)+'，当前自然报名意愿约位于 '+priceMul.toFixed(2)+' 倍附近。若晋级线设计合理，还会获得额外吸引力加成。</div><div class="mono-dim">考点数</div><div>'+(sites)+' / 上限 '+st.maxSites+'。该比赛不能超过这个考点上限。</div><div class="mono-dim">晋级线要求</div><div>'+(needsLine?'必须接入足够级别的晋级线体系。':'该比赛对晋级线层级没有额外要求。')+'</div><div class="mono-dim">争议风险</div><div>赛制、网络、培训状况都会影响挂分与异常。</div><div class="mono-dim">活动收益</div><div>开幕式、直播、颁奖等重大活动在 NOI / 夏令营 / 国家队集训 / IOI 上加成更高。</div><div class="mono-dim">晋级线加成</div><div>若上一场比赛与当前比赛层级衔接合理（通常相差 1~2 级），且通过率、收费设置顺畅，会额外吸引更多人报名。所有晋级线彼此越接近，整体体系越稳。</div></div></details><div style="font-size:13px;color:var(--dim);margin:10px 0">开赛月：<b style="color:'+(ml<=2&&!t.ranThisYear?'var(--red)':'var(--gold)')+'">'+MO[t.schedMonth]+'</b>'+(t.ranThisYear?'<span style="color:var(--green)"> · 本赛季已完成</span>':' · 距今 <b style="color:'+(ml<=2?'var(--red)':'var(--acc)')+'">'+ml+'</b> 个月')+'</div>';
+      if(!t.ranThisYear){html+='<div class="flex" style="margin-bottom:10px"><label style="font-size:13px;color:var(--dim)">📅<select class="inp twSel" data-tid="'+selT+'" data-key="schedMonth" style="width:76px">';MO.forEach(function(m,i){html+='<option value="'+i+'"'+(t.schedMonth===i?' selected':'')+'>'+m+'</option>'});html+='</select></label><label style="font-size:13px;color:var(--dim)">💰<input type="number" class="inp twInp" data-tid="'+selT+'" data-key="regPrice" value="'+(t.regPrice||50)+'" style="width:84px"></label><label style="font-size:13px;color:var(--dim)">🏫<input type="number" class="inp twInp" data-tid="'+selT+'" data-key="sites" value="'+sites+'" min="1" max="'+st.maxSites+'" style="width:68px"></label><button class="btn fpBtn" style="background:var(--acc);color:#000" data-tid="'+selT+'">+楼层</button><button class="btn ppBtn" style="background:var(--purple);color:#000" data-tid="'+selT+'">题目('+pDone+'/'+st.totP+')</button>'+(pDone<st.totP?'<button class="btn autoBtn" style="background:var(--blue);color:#000" data-tid="'+selT+'">自动分配</button>':'')+'</div>';if(needsLine&&!hasRequiredLine(selT,G.lines,G.towers))html+='<div style="font-size:12px;color:var(--red);margin-bottom:10px">⛔ 该比赛必须先接入足够级别的晋级线，否则无法正常举办。</div>';if(!t.trained)html+='<div style="font-size:12px;color:var(--orange);margin-bottom:10px">⚠️ 不培训也能开赛，但异常事件概率会显著上升，挂分与申诉风险更高。</div>';html+='<div style="margin-bottom:10px"><button class="btn autoProbBtn" data-tid="'+selT+'" style="background:'+(t.autoProb?'var(--acc)':'var(--line)')+';color:#000">🤖 自动出题：'+(t.autoProb?'已开启':'已关闭')+'</button><span style="font-size:11px;color:var(--dim);margin-left:8px">开启后每赛季开赛前自动从市场招募出题人并分配题目，出题人使用后即离开</span></div>';
+      if(!t.trained||needRetrain){html+='<div class="flex" style="margin-bottom:10px"><span style="font-size:13px;color:'+(needRetrain?'var(--orange)':'var(--dim)')+'">🎓'+(needRetrain?'考点扩张后需重新培训':'组织培训')+'：</span>';html+='<button class="btn trainBtn'+(G.money<tCL?' btn-dis':'')+'" data-tid="'+selT+'" data-q="low" style="background:#6ee7b7;color:#000">基础 ¥'+tCL+'</button>';html+='<button class="btn trainBtn'+(G.money<tCM?' btn-dis':'')+'" data-tid="'+selT+'" data-q="mid" style="background:#fbbf24;color:#000">标准 ¥'+tCM+'</button>';html+='<button class="btn trainBtn'+(G.money<tCH?' btn-dis':'')+'" data-tid="'+selT+'" data-q="high" style="background:var(--pink);color:#000">高级 ¥'+tCH+'</button>';html+='<button class="btn autoTrainBtn'+(G.money<tCL?' btn-dis':'')+'" data-tid="'+selT+'" style="background:var(--acc);color:#000">⚡ 一键培训</button>';html+='</div>';}html+='<div style="margin-bottom:8px">';html+='<button class="btn autoTrainToggleBtn" data-tid="'+selT+'" style="background:'+(t.autoTrain?'var(--gold)':'var(--line)')+';color:#000;font-size:12px">🔄 自动培训：'+(t.autoTrain?'已开启':'已关闭')+'</button>';html+='<span style="font-size:11px;color:var(--dim);margin-left:8px">开启后每赛季开赛前自动选择最高可负担档次</span>';html+='</div>'}
+      html+='<div class="flex" style="margin-bottom:10px">'+pill('比赛难度 '+st.effD,'var(--acc)','楼层会让比赛更简单或更硬核。')+pill('预计 '+epRange(ep)+' 人','var(--blue)','由口碑、收费、晋级线和活动共同决定。合理的晋级线会额外吸引更多人参加。')+pill('考点 '+sites,'var(--orange)','别超过该比赛的考点上限。')+(t.trained&&!needRetrain?pill('培训完成','var(--green)','已完成监考培训。'):'')+(needRetrain?pill('需重新培训','var(--orange)','考点数增多后需要补培训。'):'')+(jPow>=minPow?pill('算力充足','var(--green)','当前评测机足以承载该比赛。'):pill('算力不足','var(--red)','算力不够会直接翻车。'))+(t.board?pill('含住宿','var(--orange)','住宿型比赛成本更高。'):'')+((t.id==='noi'||t.id==='camp'||t.id==='team_camp')?pill('人数封顶400','var(--gold)','这类比赛规模必须更精炼，人数不会超过 400。'):'')+'</div>';
+      var floorMaintAP=((t.floors||[]).reduce(function(s2,f){var mc=floorMaintCost(f,t);return s2+mc.ap},0)),floorMaintMoney=((t.floors||[]).reduce(function(s2,f){var mc=floorMaintCost(f,t);return s2+mc.money},0));
+      html+='<div style="background:var(--bg2);border-radius:12px;padding:12px;font-size:13px;margin-bottom:10px"><div style="font-weight:900;margin-bottom:5px;color:var(--dim)">💸 本场预估成本</div><div class="flex" style="color:var(--dim)"><span>场地固定 <b style="color:var(--text)">¥'+costs.pr+'</b></span><span>按人头 <b style="color:var(--text)">¥'+costs.vr+'</b></span>'+(t.board?'<span>住宿 <b style="color:var(--orange)">¥'+costs.bo+'</b></span>':'')+'<span style="color:var(--red);font-weight:900">合计 ¥'+costs.total+'</span></div>'+(floorMaintAP>0||floorMaintMoney>0?'<div style="font-size:12px;color:var(--dim);margin-top:4px">🏗️ 楼层年维护：'+floorMaintAP+' AP + ¥'+floorMaintMoney+'（新年结算时扣）</div>':'')+'</div>';
+      if(t.lastResult){var r=t.lastResult;html+='<div style="background:var(--bg2);border-radius:12px;padding:12px;font-size:13px;margin-bottom:10px"><div style="font-weight:900;margin-bottom:5px;color:var(--gold)">📊 上次战报</div><div class="flex"><span>参赛 <b style="color:var(--acc)">'+r.part+'</b></span><span>净收益 <b style="color:'+(r.rev>=0?'var(--green)':'var(--red)')+'">¥'+r.rev+'</b></span><span>口碑 <b style="color:'+(r.repCh>=0?'var(--green)':'var(--red)')+'">'+(r.repCh>0?'+':'')+r.repCh+'</b></span>'+(r.noTrainingRisk?'<span style="color:var(--orange)">未培训开赛</span>':'')+'</div>'+(r.abnormalEvents&&r.abnormalEvents.length?'<div style="margin-top:5px;color:var(--orange)">异常：'+r.abnormalEvents.join('、')+'</div>':'')+'</div>'}
+      if(pp===selT&&!t.ranThisYear){html+='<div style="background:var(--bg2);border-radius:12px;padding:12px"><div style="font-weight:900;margin-bottom:8px">📝 题目准备面板</div>';for(var i=0;i<st.totP;i++){var prob=(t.problems||[])[i];html+='<div class="flex" style="padding:6px 0;border-bottom:1px solid rgba(36,48,77,.15)"><span style="font-weight:900;min-width:28px;color:var(--dim)">#'+(i+1)+'</span>';if(prob){html+='<span style="color:var(--acc);font-weight:800">'+prob.setter+'</span>'+pill('质量'+prob.qu,prob.qu>=7?'var(--green)':prob.qu>=4?'var(--gold)':'var(--red)','题目质量越高，比赛后越容易获得好评。')+pill('难度'+prob.diff,'var(--blue)','题目实际难度。')+(prob.verified?pill('已验题','var(--green)','经过验题，争议更少。'):(function(){var vc=verCost(prob.diff);return '<button class="btn verBtn'+(G.money<vc?' btn-dis':'')+'" data-tid="'+selT+'" data-idx="'+i+'" data-vc="'+vc+'" style="background:var(--orange);color:#000;padding:4px 9px;font-size:12px">验题 ¥'+vc+'</button>'})())+'<button class="btn unBtn" data-sid="'+prob.sid+'" data-tid="'+selT+'" data-idx="'+i+'" style="background:var(--red);color:#000;padding:4px 9px;font-size:12px">移除</button>'}else{var freeSetters=G.setters.filter(function(s){return s.used<s.cap}).concat(G.contracts.filter(function(s){return (s.usedThisMonth||0)<s.monthlyLimit&&G.money>=s.probPrice}));html+='<select class="inp assignSel" data-tid="'+selT+'" data-idx="'+i+'" style="width:auto;min-width:220px;text-align:left"><option value="">选择出题人...</option>';freeSetters.forEach(function(s){var isC=G.contracts.some(function(x){return x.id===s.id});html+='<option value="'+s.id+'">'+(isC?'[合约] ':'')+s.nm+(isC?' ¥'+s.probPrice+'/题 剩'+(s.monthlyLimit-(s.usedThisMonth||0))+'次':'（实力'+s.sk+'，质量'+s.qu+'，剩余'+(s.cap-s.used)+'）')+'</option>';});html+='</select>'}html+='</div>'}html+='</div>'}
+      html+='</div>';
+    }
+  }
+  if(tab==='lines'){
+    html+='<div class="story">比赛不是孤岛。晋级线代表选手成长路径，决定一场比赛带来的流量和信任，能否顺利流向下一站。合理且彼此接近的晋级线，会让更多家庭愿意持续投入。</div>';
+    if(bf){html+='<div class="card"><div style="margin-bottom:6px">从上一场比赛 <b style="color:var(--acc)">'+G.towers[bf].name+'</b> 出发，选择下一站：</div><div class="flex">';tids.filter(function(id){return id!==bf&&!G.lines.some(function(l){return l.from===bf&&l.to===id})}).forEach(function(id){var def=getComp(id),disabled=def&&def.minLineTier>=0&&G.towers[bf]&&G.towers[bf].tier<def.minLineTier;html+='<button class="btn brToBtn'+(disabled?' btn-dis':'')+'" data-to="'+id+'" style="background:'+(disabled?'':(TC[G.towers[id].tier]||'#888'))+';color:#000">'+G.towers[id].name+'</button>'});html+='<button class="btn" id="brCancel" style="background:var(--red);color:#000">取消</button></div><div style="font-size:12px;color:var(--dim);margin-top:8px">建议让绝大多数比赛都能沿着若干条相邻层级的晋级线通向 NOI。厕所和夏令营可以作为支线存在。</div></div>'}
+    else{html+='<div class="flex" style="margin-bottom:12px"><span style="font-size:13px;color:var(--dim)">选择上一场比赛：</span>';tids.forEach(function(id){html+='<button class="btn brFromBtn'+(G.ap<3?' btn-dis':'')+'" data-from="'+id+'" style="background:'+(TC[G.towers[id].tier]||'#888')+';color:#000">'+G.towers[id].name+'</button>'});html+='</div>'}
+    if(G.lines.length){html+='<div class="grid">';G.lines.forEach(function(l){var ep=G.towers[l.to]?estP(G.towers[l.to],G.rep,G.lines,G.towers):'?',feeMul=priceParticipationMultiplier(l.price),gap=(G.towers[l.to]&&G.towers[l.from])?Math.abs(G.towers[l.to].tier-G.towers[l.from].tier):'-';html+='<div class="card"><div class="flex" style="margin-bottom:10px"><b style="color:var(--acc)">'+G.towers[l.from].name+'</b><span style="color:var(--dim)">→</span><b style="color:var(--gold)">'+G.towers[l.to].name+'</b>'+pill('预计 '+epRange(ep)+' 人','var(--blue)','晋级线会把前序比赛的人流按通过率传导到后续比赛；如果层级衔接合理，还会额外吸引更多人参加。')+pill('层级差 '+gap,'var(--purple)','大多数晋级线最好彼此接近，通常相差 1~2 级最自然。')+'</div><div class="flex"><label style="font-size:13px;color:var(--dim)">💰 收费 <input type="number" class="brInp inp" data-bid="'+l.id+'" data-key="price" value="'+l.price+'"></label><label style="font-size:13px;color:var(--dim)">📊 通过率 <input type="number" class="brInp inp" data-bid="'+l.id+'" data-key="pass" value="'+Math.round(l.pass*100)+'">%</label><button class="btn delBridgeBtn" data-bid="'+l.id+'" style="background:var(--red);color:#000">删除晋级线</button></div><div style="font-size:12px;color:var(--dim);margin-top:6px">当前收费影响程度：'+feeMul.toFixed(2)+' 倍</div></div>'});html+='</div>'}else html+='<div class="card" style="color:var(--dim)">暂无晋级线。先搭出至少一条清晰的晋级线，整套比赛体系才会真正运转起来。</div>';
+  }
+  if(tab==='setters'){html+='<div style="font-size:15px;font-weight:900;color:var(--acc);margin-bottom:8px">📝 长期合约出题人</div>';if(G.contracts.length){html+='<div class="grid grid-auto" style="margin-bottom:16px">';G.contracts.forEach(function(s){html+='<div class="card"><div class="flex" style="justify-content:space-between;margin-bottom:4px"><b>'+s.nm+'</b><button class="btn cancelContractBtn" data-sid="'+s.id+'" style="background:var(--red);color:#000;padding:3px 8px;font-size:12px">解约</button></div>';html+='<div style="font-size:12px;color:var(--dim)">实力 '+s.sk+' · 质量 '+s.qu+'</div>';html+='<div style="font-size:12px;margin-top:4px">'+pill('¥'+s.probPrice+'/题','var(--gold)','每分配一道题扣除此费用。')+pill('本月 '+(s.usedThisMonth||0)+'/'+s.monthlyLimit,'var(--acc)','本月剩余可接题数。')+'</div>';html+='</div>';});html+='</div>';}else html+='<div style="color:var(--dim);font-size:13px;margin-bottom:16px">暂无合约出题人。与市场出题人签订合约后可长期合作，无需每赛季重新招募。</div>';html+='<div style="font-size:15px;font-weight:900;color:var(--acc);margin-bottom:8px">👤 本赛季出题人</div>';html+='<div style="font-size:12px;color:var(--dim);margin-bottom:8px;padding:6px 10px;border-radius:8px;background:var(--bg2)">⚠️ 一次性合作：比赛结束后自动离队。</div>';if(G.setters.length){html+='<div class="grid grid-auto" style="margin-bottom:16px">';G.setters.forEach(function(s){html+='<div class="card"><div style="font-weight:900">'+s.nm+'</div><div style="font-size:12px;color:var(--dim)">实力 '+s.sk+' · 质量 '+s.qu+' · 已承担 <b style="color:'+(s.used>=s.cap?'var(--red)':'var(--green)')+'">'+s.used+'/'+s.cap+'</b></div></div>'});html+='</div>';}else html+='<div style="color:var(--dim);font-size:13px;margin-bottom:16px">暂无本赛季出题人。</div>';html+='<div style="font-size:15px;font-weight:900;color:var(--acc);margin-bottom:8px">🛒 出题人市场</div>';html+='<div class="grid grid-auto">';G.market.forEach(function(s){html+='<div class="card"><div style="font-weight:900;margin-bottom:4px">'+s.nm+'</div>';html+='<div style="font-size:12px;color:var(--dim);margin-bottom:6px">实力 '+s.sk+' · 质量 '+s.qu+' · 容量 '+s.cap+'</div>';html+='<div class="flex">';html+='<button class="btn hireBtn'+(G.money<s.cost?' btn-dis':'')+'" data-sid="'+s.id+'" style="background:var(--green);color:#000">一次性招募 ¥'+s.cost+'</button>';html+='<button class="btn signContractBtn'+(G.money<s.contractFee?' btn-dis':'')+'" data-sid="'+s.id+'" style="background:var(--gold);color:#000">签合约 ¥'+s.contractFee+'</button>';html+='</div>';html+='<div style="font-size:11px;color:var(--dim);margin-top:4px">合约：¥'+s.probPrice+'/题 · 每月最多'+s.monthlyLimit+'题</div>';html+='</div>';});html+='</div>';}
+  if(tab==='insp'){var repM=G.inspectors.reduce(function(s,x){return s+x.ab*.05+x.dil*.03},0),compR=G.inspectors.reduce(function(s,x){return s+x.ab*.15},0);html+='<div class="story">真正的公信力，不是靠公告写出来的，而是靠有人愿意为流程负责、为争议背书。</div><div class="flex" style="margin-bottom:10px">'+pill('每月口碑增长 '+repM.toFixed(2),'var(--green)','每月稳定增加一点信任感。')+pill('赛后额外修正 '+compR.toFixed(1),'var(--blue)','比赛结束时再给你额外加成。')+pill('月薪 ¥'+iSal,'var(--red)','这是每个月都要出的固定成本。')+'</div><div class="grid grid-auto" style="margin-bottom:14px">';G.inspectors.forEach(function(ins){html+='<div class="card"><div class="flex" style="justify-content:space-between;margin-bottom:4px"><b>'+ins.nm+'</b><button class="btn fireBtn" data-iid="'+ins.id+'" style="background:var(--red);color:#000;padding:4px 9px;font-size:12px">解雇</button></div><div style="font-size:12px;color:var(--dim);margin-bottom:6px">'+ins.title+'</div><div class="flex">'+pill('能力 '+ins.ab,'var(--acc)','能力越强，赛后加成越明显。')+pill('尽职 '+ins.dil,'var(--gold)','越尽职，平时越能稳口碑。')+pill('¥'+ins.sal+'/月','var(--red)','每月工资。')+'</div></div>'});if(!G.inspectors.length)html+='<div class="card" style="color:var(--dim)">目前没有特派员。短期能省钱，长期会被质疑。</div>';html+='</div><div class="grid grid-auto">';G.inspMkt.forEach(function(ins){html+='<div class="card"><div style="font-weight:900;margin-bottom:4px">'+ins.nm+' <span style="font-size:12px;color:var(--dim)">'+ins.title+'</span></div><div class="flex" style="margin-bottom:6px">'+pill('能力 '+ins.ab,'var(--acc)','能力越强，赛后加成越明显。')+pill('尽职 '+ins.dil,'var(--gold)','越尽职，平时越能稳口碑。')+pill('¥'+ins.sal+'/月','var(--red)','每月工资。')+'</div><button class="btn hireIBtn'+(G.money<ins.hire?' btn-dis':'')+'" data-iid="'+ins.id+'" style="background:var(--green);color:#000">雇佣 ¥'+ins.hire+'</button></div>'});html+='</div>'}
+  if(tab==='judge'){html+='<div style="font-size:12px;color:var(--dim);margin-bottom:10px">维护费按年份递增 5%。当前 <b style="color:var(--red)">¥'+jMnt+'/月</b></div><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">';JUDGES.forEach(function(j,i){var cur=i===G.jIdx,lk=i>G.jIdx+1,isN=i===G.jIdx+1;html+='<div class="card" style="border:2px solid '+(cur?'var(--acc)':isN?'rgba(255,200,68,.4)':'var(--line)')+';opacity:'+(lk?0.34:1)+';position:relative">'+(cur?'<div style="position:absolute;top:8px;right:10px;background:var(--acc);color:#000;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:900">当前使用</div>':'')+'<div style="font-size:30px">'+j.e+'</div><div style="font-weight:900;font-size:16px;color:'+(cur?'var(--acc)':'var(--text)')+'">'+j.name+'</div><div style="font-size:12px;color:var(--blue);margin-bottom:5px">'+j.mdl+'</div><div class="flex" style="margin-bottom:6px">'+pill('算力 '+j.pow,'var(--blue)','算力越高，越能承载顶级比赛。')+pill('¥'+j.mnt+'/月','var(--red)','持续维护成本。')+'</div><div style="font-size:12px;color:var(--dim);margin-bottom:6px">可支撑：'+(COMPS.filter(function(c){return j.pow>=Math.ceil(c.tier*1.2)+1}).map(function(c){return c.name}).join('、')||'无')+'</div>'+(isN?'<button class="btn upJBtn'+(G.money<j.upg?' btn-dis':'')+'" style="background:var(--gold);color:#000">升级 ¥'+j.upg+'</button>':'')+'</div>'});html+='</div>'}
+  if(tab==='hist'){if(!G.results.length)html+='<div class="card" style="color:var(--dim)">暂无历史记录</div>';else{html+='<div class="grid">';G.results.slice().reverse().forEach(function(r){html+='<div class="card"><div class="flex" style="justify-content:space-between;margin-bottom:4px"><b style="color:'+(TC[(G.towers[r.tid]?G.towers[r.tid].tier:0)]||'#888')+'">'+r.name+'</b><span style="font-size:12px;color:var(--dim)">'+r.yr+'年'+MO[r.mo%12]+'</span></div><div class="flex" style="font-size:13px"><span>'+r.part+' 人</span><span style="color:'+(r.rev>=0?'var(--green)':'var(--red)')+'">净 ¥'+r.rev+'</span><span style="color:'+(r.repCh>=0?'var(--green)':'var(--red)')+'">口碑 '+(r.repCh>0?'+':'')+r.repCh+'</span>'+(r.noTrainingRisk?'<span style="color:var(--orange)">未培训开赛</span>':'')+'</div>'+(r.abnormalEvents&&r.abnormalEvents.length?'<div style="margin-top:4px;font-size:12px;color:var(--orange)">异常：'+r.abnormalEvents.join('、')+'</div>':'')+'</div>'});html+='</div>'}}
+  html+='</div><div class="sidecol">'+renderTutorialPanel()+renderNewsPanel()+'</div></div>'+renderLogPanel()+'</div>'+renderGuideOverlay();
+  app.innerHTML=html;bindAll();setTimeout(positionGuide,0);
+}
+function bindAll(){
+  var el=document.getElementById('logoBtn');if(el)el.onclick=function(){screen='menu';render()};
+  el=document.getElementById('adv1');if(el)el.onclick=function(){advanceMonth()};
+  el=document.getElementById('adv3');if(el)el.onclick=function(){for(var i=0;i<3;i++)advanceMonth()};
+  el=document.getElementById('adv12');if(el)el.onclick=function(){for(var i=0;i<12;i++)advanceMonth()};
+  el=document.getElementById('tutorialBtn');if(el)el.onclick=function(){tutorialOpen=!tutorialOpen;render()};
+  el=document.getElementById('changelogBtn');if(el)el.onclick=function(){changelogOpen=true;renderChangelogModal()};
+  el=document.getElementById('customCompBtn');if(el)el.onclick=function(){openCustomModal()};
+  el=document.getElementById('themeBtn');if(el)el.onclick=function(){toggleTheme()};
+  el=document.getElementById('homeBtn');if(el)el.onclick=function(){resetGame()};
+  el=document.getElementById('tPrev');if(el)el.onclick=function(){if(tutorialPage>0){tutorialPage--;render()}};
+  el=document.getElementById('tNext');if(el)el.onclick=function(){if(tutorialPage<TUTORIAL_PAGES.length-1){tutorialPage++;render()}};
+  el=document.getElementById('startGuideBtn');if(el)el.onclick=function(){startGuide()};
+  el=document.getElementById('guidePrev');if(el)el.onclick=function(){if(tutorialPage>0)prevGuide()};
+  el=document.getElementById('guideNext');if(el)el.onclick=function(){nextGuide()};
+  el=document.getElementById('guideSkip');if(el)el.onclick=function(){skipGuide()};
+  document.querySelectorAll('.tabBtn').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;render()}});
+  document.querySelectorAll('.warngo').forEach(function(b){b.onclick=function(){tab='matches';selT=b.dataset.tid;render()}});
+  document.querySelectorAll('.unlockBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(){var def=COMPS.find(function(d){return d.id===b.dataset.id});if(def)unlockTower(def)}});
+  document.querySelectorAll('.matchCard').forEach(function(c){c.onclick=function(){selT=selT===c.dataset.id?null:c.dataset.id;pp=null;render()}});
+  document.querySelectorAll('.twSel').forEach(function(s){s.onchange=function(){updTw(s.dataset.tid,s.dataset.key,parseInt(s.value))}});
+  document.querySelectorAll('.twInp').forEach(function(inp){inp.onchange=function(){var v=parseInt(inp.value)||0;if(inp.dataset.key==='sites')v=cl(v,1,cSt(G.towers[inp.dataset.tid]).maxSites);else if(inp.dataset.key==='regPrice')v=cl(v,0,9999);updTw(inp.dataset.tid,inp.dataset.key,v)}});
+  document.querySelectorAll('.fpBtn').forEach(function(b){b.onclick=function(e){e.stopPropagation();fp=b.dataset.tid;renderFloorPicker()}});
+  document.querySelectorAll('.ppBtn').forEach(function(b){b.onclick=function(e){e.stopPropagation();pp=pp===b.dataset.tid?null:b.dataset.tid;render()}});
+  document.querySelectorAll('.autoBtn').forEach(function(b){b.onclick=function(e){e.stopPropagation();doAutoAssign(b.dataset.tid)}});
+  document.querySelectorAll('.autoProbBtn').forEach(function(b){b.onclick=function(e){e.stopPropagation();doToggleAutoProb(b.dataset.tid)}});
+  document.querySelectorAll('.autoTrainBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(e){e.stopPropagation();doAutoTrain(b.dataset.tid)}});
+  document.querySelectorAll('.autoTrainToggleBtn').forEach(function(b){b.onclick=function(e){e.stopPropagation();doToggleAutoTrain(b.dataset.tid)}});
+  document.querySelectorAll('.trainBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(e){e.stopPropagation();doTrain(b.dataset.tid,b.dataset.q)}});
+  document.querySelectorAll('.verBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(e){e.stopPropagation();doVerify(b.dataset.tid,parseInt(b.dataset.idx))}});
+  document.querySelectorAll('.unBtn').forEach(function(b){b.onclick=function(e){e.stopPropagation();doUnassign(b.dataset.sid,b.dataset.tid,parseInt(b.dataset.idx))}});
+  document.querySelectorAll('.assignSel').forEach(function(s){s.onchange=function(){if(s.value)doAssign(s.value,s.dataset.tid,parseInt(s.dataset.idx))}});
+  document.querySelectorAll('.brFromBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(){bf=b.dataset.from;render()}});
+  document.querySelectorAll('.brToBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(){doAddLine(bf,b.dataset.to)}});
+  el=document.getElementById('brCancel');if(el)el.onclick=function(){bf=null;render()};
+  document.querySelectorAll('.brInp').forEach(function(inp){inp.onchange=function(){var v=parseInt(inp.value)||0;if(inp.dataset.key==='price')updLine(inp.dataset.bid,'price',cl(v,0,9999));else updLine(inp.dataset.bid,'pass',cl(v,1,100)/100)}});
+  document.querySelectorAll('.delBridgeBtn').forEach(function(b){b.onclick=function(){delLine(b.dataset.bid)}});
+  document.querySelectorAll('.hireBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(){var s=G.market.find(function(x){return x.id===b.dataset.sid});if(s)doHire(s)}});
+  document.querySelectorAll('.signContractBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(){doSignContract(b.dataset.sid)}});
+  document.querySelectorAll('.cancelContractBtn').forEach(function(b){b.onclick=function(){doCancelContract(b.dataset.sid)}});
+  document.querySelectorAll('.fireBtn').forEach(function(b){b.onclick=function(){doFireI(b.dataset.iid)}});
+  document.querySelectorAll('.hireIBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(){var ins=G.inspMkt.find(function(x){return x.id===b.dataset.iid});if(ins)doHireI(ins)}});
+  document.querySelectorAll('.upJBtn:not(.btn-dis)').forEach(function(b){b.onclick=function(){doUpJ()}});
+}
+function renderFloorPicker(){
+  var existing=document.querySelector('.modal-bg.fp-modal');if(existing)existing.remove();if(!fp||!G.towers[fp])return;
+  var t=G.towers[fp],eids=(t.floors||[]).map(function(f){return f.id}),modal=document.createElement('div');modal.className='modal-bg fp-modal';
+  var inner='<div class="modal"><div class="flex" style="justify-content:space-between;margin-bottom:16px"><span style="font-size:18px;font-weight:900;color:var(--acc)">为 '+t.name+' 添加楼层</span><button class="btn fpClose" style="background:var(--red);color:#000">关闭</button></div>';
+  FCATS.forEach(function(cat){var floors=FLOORS.filter(function(f){return f.cat===cat.id}),hasCat=(t.floors||[]).some(function(f){return f.cat===cat.id});inner+='<div style="margin-bottom:16px"><div style="font-size:15px;font-weight:900;color:'+cat.c+';margin-bottom:8px">'+cat.name+(cat.ex&&hasCat?' <span style="font-size:12px;color:var(--dim)">（本类互斥）</span>':'')+'</div><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">';floors.forEach(function(f){var owned=eids.indexOf(f.id)>=0,blocked=cat.ex&&hasCat,dis=owned||blocked||G.ap<f.ap||G.money<f.cost;inner+='<div class="floorOpt'+(dis?' btn-dis':'')+'" data-fid="'+f.id+'" style="padding:10px;border-radius:12px;background:'+(dis?'var(--bg2)':cat.c+'08')+';border:1px solid '+(dis?'var(--line)':cat.c+'30')+';cursor:'+(dis?'not-allowed':'pointer')+';opacity:'+(dis?0.35:1)+'"><div style="font-weight:900;font-size:13px;margin-bottom:3px">'+f.icon+' '+f.name+'</div><div style="font-size:12px;color:var(--dim);margin-bottom:4px">'+f.desc+'</div><div style="font-size:12px;color:var(--gold);margin-bottom:4px">'+f.formal+'</div><div style="font-size:12px;color:'+cat.c+'">'+(f.ap>0?'AP '+f.ap+' ':'')+(f.cost>0?'¥'+f.cost:'')+((!f.ap&&!f.cost)?'免费':'')+(f.cat==='fac'||f.cat==='evt'?' | 维护随规模增长':'')+'</div></div>'});inner+='</div></div>'});inner+='</div>';
+  modal.innerHTML=inner;modal.onclick=function(e){if(e.target===modal){fp=null;modal.remove()}};document.body.appendChild(modal);
+  modal.querySelector('.fpClose').onclick=function(){fp=null;modal.remove()};
+  modal.querySelectorAll('.floorOpt:not(.btn-dis)').forEach(function(el){el.onclick=function(){var fd=FLOORS.find(function(f){return f.id===el.dataset.fid});if(fd){doAddFloor(fp,fd);modal.remove()}}})
+}
+resetGame();
+</script>
+
+
+</body></html>

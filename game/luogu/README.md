@@ -7,3 +7,5 @@
 - [**OJ 运维模拟器**](https://www.luogu.com.cn/article/dcqcee1r)（OJ，by @[chen_zhe](https://www.luogu.com.cn/user/8457)）
 - [**whk 班主任模拟器**](https://www.luogu.com.cn/article/44li54py)（headteacher，by @[paper_](https://www.luogu.com.cn/user/515891)）
 - [**OIER 高考复健模拟器**](https://www.luogu.com.cn/article/pcmkzd7x)（oier-gaokao-recovery-simulator，by @[LEOOOOOOOOO](https://www.luogu.com.cn/user/1424509)）
+- [**OI 生涯模拟器**](https://www.luogu.com.cn/article/1wtci13h)（OIer_2，by @[weiyc1](https://www.luogu.com.cn/user/1512067)）
+- [**OI 协会模拟器**](https://www.luogu.com.cn/article/w9cahexa)（CCF，by @[wurang](https://www.luogu.com.cn/user/836786)）
