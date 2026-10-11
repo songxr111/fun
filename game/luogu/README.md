@@ -9,3 +9,4 @@
 - [**OIER 高考复健模拟器**](https://www.luogu.com.cn/article/pcmkzd7x)（oier-gaokao-recovery-simulator，by @[LEOOOOOOOOO](https://www.luogu.com.cn/user/1424509)）
 - [**OI 生涯模拟器**](https://www.luogu.com.cn/article/1wtci13h)（OIer_2，by @[weiyc1](https://www.luogu.com.cn/user/1512067)）
 - [**OI 协会模拟器**](https://www.luogu.com.cn/article/w9cahexa)（CCF，by @[wurang](https://www.luogu.com.cn/user/836786)）
+- [**VR OI 模拟器 2.0**](https://www.luogu.com.cn/article/iogi09n2)（vr-oi-simulator，by @[Jian_Yu](https://www.luogu.com.cn/user/581061)）
